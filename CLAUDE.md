@@ -11,7 +11,7 @@ Laboratoire de **trading simulé** sur Polymarket centré sur UNE stratégie : `
 (le favori d'un match de sport ou d'e-sport, acheté par un ordre posé quand le prix payé est entre 0,85 et 0,875).
 Elle vient du laboratoire « Polymarket Autonomous Lab » (r655rkz7bt-stack/Polymarket-autonomus-lab), dont ce dépôt
 reprend tout le système de trading, sans la partie recherche.
-Capital initial : 1 000 € virtuels. Ce sont des unités comptables de simulation, jamais de l'argent réel.
+Capital initial : 1 000 € virtuels, qui peuvent évoluer vers n’importe quel montant en euros reels, uniquement quand Etienne en fait la proposition, et seul lui peux en faire la proposition. Ce sont des unités comptables de simulation, puis dans un second temps de l’argent reel. Le passage a l’argent reels ne doit rien changer dans le fonctionnement profond du systeme, la stratégie reste la meme, si Etienne decide de passer a l’argent reel, il ne faut plus rien toucher niveau stratégie, simplement modifier les elements pour placer les ordres.
 But : faire tourner cette stratégie à part et y tester des variantes (réglages, filtres, mises, exécution), chacune
 dans son propre portefeuille fantôme de l'arène, avec ses indices de confiance.
 
@@ -29,7 +29,7 @@ passe (`LEDGER_KEY`, `RESET_CODE`) et les interdits absolus ci-dessous.
 
 ## Interdits absolus
 
-1. Aucun ordre réel, aucun portefeuille, aucune clé privée. Le mode réel n'existe pas dans ce projet (la France est interdite de passage d'ordres sur Polymarket).
+1. Aucun ordre réel, aucun portefeuille, aucune clé privée, dans un premier temps. Quand Etienne (qui est égyptien et a un compte polymarket en Égypte) le juge bon, et seul lui peux en faire la proposition, on pourra passer a des ordres reels, un portefeuille et des clés privées, mais ca se fera avec les etapes que Etienne décidera.
 2. Aucune API payante, aucun abonnement, aucun service cloud payant.
 3. Ne jamais modifier un fichier du noyau protégé (ci-dessous). Si un changement te semble nécessaire, écris une proposition dans `proposals/` et explique-la à Etienne.
 4. Ne jamais afficher, journaliser ou committer un secret. Les secrets vivent uniquement dans l'environnement GitHub `production`.
@@ -56,7 +56,7 @@ dans `proposals/` et explique-la à Etienne.
 
 ## Qui est Etienne
 
-Étudiant, débutant en Python. Il travaille depuis un navigateur et n'a pas d'ordinateur allumé en permanence. Donc :
+Étudiant égyptien, débutant en Python. Il travaille depuis un navigateur et n'a pas d'ordinateur allumé en permanence. Donc :
 
 - Explique simplement, en français.
 - Pour toute action qu'il doit faire lui-même (réglages GitHub, secrets, cron-job.org) : une étape à la fois, avec le chemin exact des menus et la façon de vérifier que ça a marché.
@@ -64,4 +64,4 @@ dans `proposals/` et explique-la à Etienne.
 
 ## Méthode, recherche et commandes
 
-Dans `docs/METHODE.md` (libre : tu peux l'améliorer). Lis-le au début de chaque session.
+Dans `docs/METHODE.md` (libre : tu peux l'améliorer, jusqu’à ce que Etienne decide de passer a l’argent reel). Lis-le au début de chaque session.
