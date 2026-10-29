@@ -1,17 +1,17 @@
 {
  "dernier_seq": {
-  "principal": 126,
-  "fantome:nf_sport_patiente_prix_850_875_avant_match_v1.0.0": 9,
-  "fantome:nf_sport_patiente_prix_850_875_v1.0.0": 14
- },
- "dernier_seq_reglements": {
-  "principal": 126,
-  "fantome:nf_sport_patiente_prix_850_875_avant_match_v1.0.0": 9,
+  "principal": 127,
+  "fantome:nf_sport_patiente_prix_850_875_avant_match_v1.0.0": 10,
   "fantome:nf_sport_patiente_prix_850_875_v1.0.0": 16
  },
- "verifiees": 2,
+ "dernier_seq_reglements": {
+  "principal": 127,
+  "fantome:nf_sport_patiente_prix_850_875_avant_match_v1.0.0": 10,
+  "fantome:nf_sport_patiente_prix_850_875_v1.0.0": 16
+ },
+ "verifiees": 3,
  "non_verifiables": 0,
  "reglements_verifies": 1,
  "anomalies": [],
- "derniere_execution": "2026-10-29T04:56:55+00:00"
+ "derniere_execution": "2026-10-29T04:58:53+00:00"
 }
