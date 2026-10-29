@@ -74,7 +74,7 @@ Détail : `docs/EXPLOITATION.md`. Résumé :
 6. **Settings → Pages** : branche `gh-pages`, dossier `/` → tableau de bord à
    `https://r655rkz7bt-stack.github.io/polymarket-labo-favori-sport/`.
 7. Ruleset `protection-data` (pas de suppression ni de force push sur `data`), puis `protection-main` (`docs/VERROUILLAGE.md`).
-8. cron-job.org : nouveau jeton GitHub (fine-grained, ce seul dépôt, permission Actions) et tâche toutes les 2 minutes (choix d'Etienne, = `cycle.bucket_minutes`) sur
+8. cron-job.org : nouveau jeton GitHub (fine-grained, ce seul dépôt, permission Actions) et tâche toutes les 5 minutes (comme l'ancien labo, = `cycle.bucket_minutes`) sur
    `…/repos/r655rkz7bt-stack/polymarket-labo-favori-sport/actions/workflows/cycle.yml/dispatches` ; le jeton ne passe jamais
    par la conversation.
 9. Facultatif : installer l'application GitHub de Claude sur ce dépôt pour qu'une session puisse y travailler.
@@ -122,9 +122,15 @@ Détail : `docs/EXPLOITATION.md`. Résumé :
   - capital : il reste à 1 000 € (décision d'Etienne) ; seuls les paris du fantôme comptent (confiance et mise) ;
   - plus aucune règle propre au capital principal de l'ancien labo (mise ≤ 10 %, plafond par famille, réserve de 3 %,
     copie, annulation au coup d'envoi) ;
-  - différences d'environnement restantes avec l'ancien fantôme : cycle toutes les 2 min (5 dans l'ancien labo) et
-    marchés observés (l'ancien fantôme voyait aussi les marchés demandés par ses voisines, ex. `outsider_sport_patiente`,
-    `outsider_itf`, et ceux des pages par étiquette du scanner : 86 marchés achetés, surtout e-sport et tennis ITF peu
-    échangés ; ici, seulement les 150 plus échangés). Décision d'Etienne attendue ;
   - vérifié : 262 tests verts, cycle local réel (facteur de mise 1,0).
+- **29/10/2026, « comme le fantôme exactement »** (Etienne) :
+  - cycle toutes les 5 minutes, comme l'ancien labo (`cycle.bucket_minutes: 5`, cron-job.org réglé par Etienne) ;
+  - mêmes marchés vus : le scanner de l'ancien labo et ses réglages exacts (pages par étiquette, marchés longs, échus,
+    séries d'e-sport : ~4 900 marchés lus) ; puis les marchés de sport demandés par ses voisines de l'ancien labo
+    (`voisines.py`, code copié mot pour mot, `config/voisines.yaml` : 17 stratégies actives, sans leurs paris). Sur ses
+    86 marchés achetés, beaucoup d'e-sport et de tennis ITF peu échangés venaient de ces demandes. Vérifié : sur les
+    mêmes réponses de Polymarket, l'ancien code et celui-ci montrent au fantôme les mêmes 57 marchés de sport ;
+  - limites : les demandes qui dépendent de sources externes (calendrier NHL, Kalshi, PredictIt, Manifold, tweets) ne
+    sont pas reprises ; l'ancien labo continue d'évoluer : `config/voisines.yaml` est sa photo du 29/10/2026 ;
+  - vérifié : cycle local réel en 36 s (4 893 marchés, 33 marchés de sport demandés par les voisines, un ordre posé).
 

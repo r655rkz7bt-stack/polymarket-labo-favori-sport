@@ -2,7 +2,7 @@
 
 Usage :
   python scripts/run_simulation.py --once [--dev-key]
-  python scripts/run_simulation.py --loop --interval 120 [--dev-key]
+  python scripts/run_simulation.py --loop --interval 300 [--dev-key]
 
 Codes de sortie : 0 = OK / dégradé / faillite ; 1 = erreur ; 2 = journal corrompu ou absent.
 """
@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 
 from _common import ROOT, get_key, load_settings, resolve, setup_logging
 
-from polymarket_agent import antecedents, dashboard
+from polymarket_agent import antecedents, dashboard, voisines
 from polymarket_agent.http_client import HttpClient
 from polymarket_agent.main import CycleDeps, run_cycle
 from polymarket_agent.persistence import Database
@@ -85,6 +85,7 @@ def one_cycle(settings: dict, key: bytes) -> int:
                 clob=ClobClient(http, src["polymarket_clob"]["base_url"],
                                 batch_size=src["polymarket_clob"]["books_batch_size"]),
                 history=antecedents.load(resolve(ROOT, paths["antecedents"]) if paths.get("antecedents") else None),
+                voisines=voisines.charger(ROOT / "config" / "voisines.yaml"),
             )
             report = run_cycle(deps)
             site = maybe_build_dashboard(settings, key, db, report)
@@ -105,7 +106,7 @@ def main() -> int:
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--once", action="store_true", help="un seul cycle")
     mode.add_argument("--loop", action="store_true", help="boucle locale (Ctrl+C pour arrêter)")
-    parser.add_argument("--interval", type=int, default=120, help="secondes entre deux cycles")
+    parser.add_argument("--interval", type=int, default=300, help="secondes entre deux cycles")
     parser.add_argument("--dev-key", action="store_true", help="clé locale de développement")
     args = parser.parse_args()
     settings = load_settings()

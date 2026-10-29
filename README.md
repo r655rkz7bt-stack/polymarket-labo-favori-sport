@@ -11,13 +11,15 @@ acheteur (on attend un vendeur, on paie moins cher, souvent sans frais), seuleme
 de plusieurs dizaines de stratégies de favoris, une part de son avance peut venir de la chance. Ce laboratoire sert à le vérifier.
 
 ## Ce qui tourne
-- **Cycle** toutes les 2 minutes (GitHub Actions, lancé par cron-job.org) : lecture des marchés et des carnets publics de
+- **Cycle** toutes les 5 minutes, comme dans l'ancien labo (GitHub Actions, lancé par cron-job.org) : lecture des marchés et des carnets publics de
   Polymarket, propositions de la stratégie, contrôleur de sécurité, simulation d'exécution sur les vrais carnets (frais
   compris), journal signé.
 - **Un seul portefeuille** (depuis le 29/10/2026, plus d'arène) : la stratégie trade directement le capital principal,
   **aux conditions de son ancien fantôme** (Kelly × prudence × renfort, `sante.py` ; une mise au plus 25 % du capital) et
   en **reprenant la suite de son passé** : son journal du labo d'origine (`archives/labo_origine/`) est relu à chaque
   cycle (`antecedents.py`) ; ses paris comptent dans la confiance et la mise, le capital part de 1 000 €.
+- **Les mêmes marchés que le fantôme** : le scanner de l'ancien labo (réglages identiques, pages par étiquette comprises)
+  et les demandes de marchés de ses voisines de l'ancien labo (`voisines.py`, `config/voisines.yaml`), sans leurs paris.
 - **Indices de confiance** de la stratégie, calculés sur ses paris terminés, passé compris (`confiance.py`) : score t,
   pourcentage, confiance par jour, gagnés contre attendus, verdict.
 - **Règle n°1** : à 0 € disponible, le trading s'arrête définitivement (code protégé `ledger.py`, `safety_controller.py`).

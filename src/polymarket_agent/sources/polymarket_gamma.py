@@ -192,6 +192,16 @@ class GammaClient:
                         return markets
         return markets
 
+    def list_series_events(self, series_id: int | str, *, end_min: datetime, limit: int = 100) -> list[dict]:
+        """Événements ouverts d'une série de sport (23/10/2026) : les matchs d'e-sport (CS2 10310,
+        LoL 10311, Dota 2 10309, Valorant 10369) ne se trouvent pas par étiquette, seulement par série
+        (docs/ROUTINE_CHERCHEUR.md, astuces). Chaque événement porte ses marchés (`markets`)."""
+        rows = self.http.get_json(f"{self.base_url}/events", params={
+            "series_id": str(series_id), "closed": "false", "end_date_min": _iso(end_min), "limit": limit})
+        if not isinstance(rows, list):
+            raise ValueError("Gamma : liste attendue")
+        return [r for r in rows if isinstance(r, dict)]
+
     def get_market(self, market_id: str) -> dict:
         return self.http.get_json(f"{self.base_url}/markets/{market_id}")
 

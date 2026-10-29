@@ -10,7 +10,11 @@ portefeuilles fantômes, la santé des stratégies et les récompenses estimées
 1. Journal signé du capital principal relu et vérifié (`ledger.py`) ; faillite = arrêt. Ordres posés laissés par les
    anciens fantômes : annulés (`Database.cancel_orders_except`).
 2. Règlements des marchés terminés (`settlement.py`, marchés lus par lots).
-3. Scanner (`market_scanner.py`, Gamma) : 1 500 marchés, les 150 plus échangés surveillés ; carnets (CLOB).
+3. Scanner (`market_scanner.py`, Gamma), réglages identiques à l'ancien labo : environ 4 900 marchés (pages par étiquette,
+   marchés longs, échus, séries d'e-sport), les 150 plus échangés surveillés. Puis les marchés de sport demandés par
+   les voisines de l'ancien labo (`voisines.py`, code repris mot pour mot, seulement leurs demandes) ; carnets (CLOB).
+   Vérifié le 29/10/2026 : sur les mêmes réponses de Polymarket, l'ancien code et celui-ci montrent au fantôme les
+   mêmes 57 marchés de sport.
 4. Ordres posés des cycles précédents : servis si un vendeur traverse leur prix, annulés à l'expiration, à la fermeture du
    marché ou, si la stratégie le demande, au coup d'envoi (`execution_simulator.simulate_resting_buy`).
 5. Santé (`sante.py`) : facteur de mise aux règles de l'ancien fantôme (prudence × renfort, ou 0 si suspendue), calculé

@@ -22,7 +22,7 @@ replier: [ordres-poses, journal, decisions-recentes, systeme]
 a_la_une:
   date: "2026-10-29"
   points:
-    - "Plus d'arène : nf_sport_patiente_prix_850_875 (favori de sport, prix du vendeur 0,85-0,875, ordre posé) trade directement le capital principal (départ 1 000 €), aux mêmes conditions que son ancien fantôme ; ses 85 paris du 20 au 28/10 comptent dans sa confiance et sa mise."
+    - "Plus d'arène : nf_sport_patiente_prix_850_875 (favori de sport, prix du vendeur 0,85-0,875, ordre posé) trade directement le capital principal (départ 1 000 €), aux mêmes conditions que son ancien fantôme (mêmes règles de mise, mêmes marchés vus, cycle de 5 min) ; ses 85 paris du 20 au 28/10 comptent dans sa confiance et sa mise."
 
 # Courbes de la stratégie : le bouton « Voir ses courbes » charge le journal PUBLIC du capital principal
 # (fichier ledger.jsonl de la branche « data ») depuis cette adresse et calcule les courbes dans le navigateur.

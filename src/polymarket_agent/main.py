@@ -21,7 +21,7 @@ from decimal import Decimal, ROUND_DOWN, ROUND_UP
 from pathlib import Path
 from typing import Callable
 
-from polymarket_agent import antecedents, sante
+from polymarket_agent import antecedents, sante, voisines as voisines_mod
 from polymarket_agent.correlation import correlation_group
 from polymarket_agent.execution_simulator import simulate_buy, simulate_resting_buy
 from polymarket_agent.http_client import SourceUnavailable
@@ -59,6 +59,8 @@ class CycleDeps:
     now: Callable[[], datetime] = lambda: datetime.now(timezone.utc)
     # Antécédents : journal du fantôme de la stratégie dans le labo d'origine (antecedents.load), [] sans eux.
     history: list = field(default_factory=list)
+    # Voisines : demandes de marchés des stratégies de l'ancien labo (voisines.charger), [] sans elles.
+    voisines: list = field(default_factory=list)
 
 
 @dataclass
@@ -227,6 +229,21 @@ def _trade(deps: CycleDeps, main: Portfolio, report: CycleReport, bucket: str) -
     report.counts.update(markets=len(result.markets), watchlist=len(result.watchlist))
     _lap(report, "scanner")
 
+    # 4 bis. Marchés que les voisines de l'ancien labo faisaient voir au fantôme (voisines.py), comme son étape 4 bis :
+    #        demandes servies à tour de rôle, au plus `scanner.max_extra_markets`, ajoutées à la liste de surveillance.
+    live = [m for m in result.markets if m.eligible and not m.ended]
+    known = {m.market_id for m in result.watchlist}
+    max_extra = int(deps.settings["scanner"].get("max_extra_markets", 40))
+    for market in _round_robin(voisines_mod.demandes(deps.voisines, live)):
+        if max_extra <= 0:
+            break
+        if market.market_id not in known:
+            result.watchlist.append(market)
+            known.add(market.market_id)
+            max_extra -= 1
+    report.counts["demandes_voisines"] = len(result.watchlist) - report.counts["watchlist"]
+    _lap(report, "voisines")
+
     # 5. Carnets : les deux issues de chaque marché surveillé, les positions détenues (prix de marque)
     #    et les jetons des ordres posés.
     wanted = [t for market in result.watchlist if len(market.token_ids) == 2 for t in market.token_ids]
@@ -296,7 +313,7 @@ def _execute(deps: CycleDeps, portfolio: Portfolio, watchlist: list[MarketInfo],
     proposals = []
     held_now: dict[str, set[str]] = {}  # marché → jetons de favoris pris ou proposés dans ce cycle
     for strategy in portfolio.strategies:
-        seen = watchlist
+        seen = _visible(strategy, watchlist)
         started = []
         if getattr(strategy, "annuler_au_coup_d_envoi", False):
             # Ses ordres posés tombent au coup d'envoi (_fill_resting) : elle ne prend donc pas non plus de nouveau pari
@@ -471,6 +488,22 @@ class _OnceGamma:
 
     def __getattr__(self, name):
         return getattr(self.gamma, name)
+
+
+def _visible(strategy, watchlist: list[MarketInfo]) -> list[MarketInfo]:
+    """Marchés montrés à une stratégie (comme dans l'ancien labo) : pas les marchés échus (sauf `wants_ended`), et les
+    marchés longs des pages longues (`extra_only`) seulement si ELLE les a demandés."""
+    asked = getattr(strategy, "asked_markets", None) or set()
+    ended_ok = getattr(strategy, "wants_ended", False)
+    return [m for m in watchlist if (ended_ok or not m.ended) and (not m.extra_only or m.market_id in asked)]
+
+
+def _round_robin(lists: list[list]) -> list:
+    """[a1, a2], [b1], [c1, c2, c3] → a1, b1, c1, a2, c2, c3 (chaque demande à son tour)."""
+    out, depth = [], max((len(x) for x in lists), default=0)
+    for i in range(depth):
+        out += [x[i] for x in lists if i < len(x)]
+    return out
 
 
 def _price_drop(deps: CycleDeps, proposal: Proposal, before: OrderBook | None, fresh: OrderBook | None) -> str | None:

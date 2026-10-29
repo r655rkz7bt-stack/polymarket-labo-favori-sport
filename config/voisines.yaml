@@ -1,0 +1,866 @@
+# Voisines : les stratégies de l'ancien labo dont les DEMANDES de marchés faisaient voir des marchés de sport au fantôme de
+# nf_sport_patiente_prix_850_875 (src/polymarket_agent/voisines.py). Copié de l'ancien labo le 29/10/2026 (commit cab602d,
+# config/strategies.yaml), réglages inchangés : seules les stratégies encore actives (non éliminées de son arène) dont la
+# demande peut contenir du sport. Elles ne tradent PAS ici : seule leur demande de marchés est reprise.
+# Ne pas modifier : ce fichier décrit ce que voyait le fantôme, pas une stratégie de ce labo.
+
+outsider_itf:
+  class: naive_favorite
+  familles:
+  - sports
+  filtres:
+    sources:
+    - itftennis.com
+    ecart_max: 0.05
+  enabled: true
+  version: 1.0.0
+  created_at: '2026-10-20'
+  params:
+    underdog:
+      value: 1
+      min: 0
+      max: 1
+    min_ask:
+      value: 0.05
+      min: 0.01
+      max: 0.5
+    max_ask:
+      value: 0.3
+      min: 0.02
+      max: 0.5
+    bias:
+      value: 0.05
+      min: 0.0
+      max: 0.15
+    uncertainty:
+      value: 0.015
+      min: 0.01
+      max: 0.1
+    min_net_edge:
+      value: 0.0
+      min: 0.0
+      max: 0.5
+    min_hours:
+      value: 0.25
+      min: 0
+      max: 720
+    max_hours:
+      value: 3
+      min: 0.5
+      max: 2000
+    max_candidates:
+      value: 40
+      min: 0
+      max: 200
+    max_extra_ticks:
+      value: 1
+      min: 0
+      max: 5
+    max_proposals_per_cycle:
+      value: 3
+      min: 0
+      max: 50
+    kelly_fraction:
+      value: 0.25
+      min: 0.0
+      max: 5.0
+favori_esport_milieu:
+  class: naive_favorite
+  filtres:
+    familles:
+    - sports
+    question_contient:
+    - 'counter-strike:'
+    types_pari:
+    - vainqueur
+    un_match: true
+    heures_min: 3
+    heures_max: 6
+  enabled: true
+  version: 1.0.0
+  created_at: '2026-10-28'
+  params:
+    min_ask:
+      value: 0.65
+      min: 0.5
+      max: 0.97
+    max_ask:
+      value: 0.8
+      min: 0.6
+      max: 0.98
+    bias:
+      value: 0.03
+      min: 0.0
+      max: 0.06
+    uncertainty:
+      value: 0.015
+      min: 0.01
+      max: 0.1
+    min_net_edge:
+      value: 0.0
+      min: 0.0
+      max: 0.5
+    max_extra_ticks:
+      value: 2
+      min: 0
+      max: 5
+    max_proposals_per_cycle:
+      value: 3
+      min: 0
+      max: 50
+    kelly_fraction:
+      value: 1.0
+      min: 0.0
+      max: 5.0
+vague_volume_suivre:
+  class: vague_volume
+  enabled: true
+  version: 1.0.0
+  created_at: '2026-10-22'
+  params:
+    direction:
+      value: 1
+      min: -1
+      max: 1
+    surge_min:
+      value: 3.0
+      min: 1.5
+      max: 20.0
+    min_age_days:
+      value: 3
+      min: 2
+      max: 30
+    min_base_volume:
+      value: 500
+      min: 0
+      max: 100000
+    min_hours_to_end:
+      value: 48
+      min: 0
+      max: 2000
+    min_move:
+      value: 0.03
+      min: 0.0
+      max: 0.5
+    side_min:
+      value: 0.55
+      min: 0.05
+      max: 0.95
+    side_max:
+      value: 0.9
+      min: 0.1
+      max: 0.99
+    shift:
+      value: 0.03
+      min: 0.0
+      max: 0.2
+    uncertainty:
+      value: 0.01
+      min: 0.0
+      max: 0.1
+    min_net_edge:
+      value: 0.01
+      min: 0.0
+      max: 0.2
+    max_candidates:
+      value: 30
+      min: 0
+      max: 200
+    max_extra_ticks:
+      value: 1
+      min: 0
+      max: 5
+    max_proposals_per_cycle:
+      value: 2
+      min: 0
+      max: 20
+    kelly_fraction:
+      value: 0.25
+      min: 0.0
+      max: 2.0
+vague_volume_suivre_x5:
+  class: vague_volume
+  enabled: true
+  version: 1.0.0
+  created_at: '2026-10-23'
+  params:
+    direction:
+      value: 1
+      min: -1
+      max: 1
+    surge_min:
+      value: 5.0
+      min: 1.5
+      max: 20.0
+    min_age_days:
+      value: 3
+      min: 2
+      max: 30
+    min_base_volume:
+      value: 500
+      min: 0
+      max: 100000
+    min_hours_to_end:
+      value: 48
+      min: 0
+      max: 2000
+    min_move:
+      value: 0.03
+      min: 0.0
+      max: 0.5
+    side_min:
+      value: 0.55
+      min: 0.05
+      max: 0.95
+    side_max:
+      value: 0.9
+      min: 0.1
+      max: 0.99
+    shift:
+      value: 0.03
+      min: 0.0
+      max: 0.2
+    uncertainty:
+      value: 0.01
+      min: 0.0
+      max: 0.1
+    min_net_edge:
+      value: 0.01
+      min: 0.0
+      max: 0.2
+    max_candidates:
+      value: 30
+      min: 0
+      max: 200
+    max_extra_ticks:
+      value: 1
+      min: 0
+      max: 5
+    max_proposals_per_cycle:
+      value: 2
+      min: 0
+      max: 20
+    kelly_fraction:
+      value: 0.25
+      min: 0.0
+      max: 2.0
+moins_de_cartes:
+  class: moins_de_cartes
+  enabled: true
+  version: 1.0.0
+  created_at: '2026-10-23'
+  params:
+    min_hours:
+      value: 1
+      min: 0
+      max: 48
+    max_hours:
+      value: 6
+      min: 1
+      max: 72
+    price_min:
+      value: 0.3
+      min: 0.05
+      max: 0.9
+    price_max:
+      value: 0.7
+      min: 0.1
+      max: 0.95
+    shift:
+      value: 0.05
+      min: 0.0
+      max: 0.2
+    uncertainty:
+      value: 0.01
+      min: 0.0
+      max: 0.1
+    min_net_edge:
+      value: 0.01
+      min: 0.0
+      max: 0.2
+    max_candidates:
+      value: 40
+      min: 0
+      max: 200
+    max_extra_ticks:
+      value: 1
+      min: 0
+      max: 5
+    max_proposals_per_cycle:
+      value: 3
+      min: 0
+      max: 20
+    kelly_fraction:
+      value: 0.25
+      min: 0.0
+      max: 2.0
+moins_de_cartes_franche:
+  class: moins_de_cartes
+  enabled: true
+  version: 1.0.0
+  created_at: '2026-10-27'
+  params:
+    min_hours:
+      value: 1
+      min: 0
+      max: 48
+    max_hours:
+      value: 6
+      min: 1
+      max: 72
+    price_min:
+      value: 0.3
+      min: 0.05
+      max: 0.9
+    price_max:
+      value: 0.7
+      min: 0.1
+      max: 0.95
+    shift:
+      value: 0.05
+      min: 0.0
+      max: 0.2
+    uncertainty:
+      value: 0.01
+      min: 0.0
+      max: 0.1
+    min_net_edge:
+      value: 0.01
+      min: 0.0
+      max: 0.2
+    max_candidates:
+      value: 40
+      min: 0
+      max: 200
+    max_extra_ticks:
+      value: 1
+      min: 0
+      max: 5
+    max_proposals_per_cycle:
+      value: 3
+      min: 0
+      max: 20
+    kelly_fraction:
+      value: 0.5
+      min: 0.0
+      max: 2.0
+moins_de_kills:
+  class: moins_de_kills
+  filtres:
+    titre_contient:
+    - 'lol:'
+  enabled: true
+  version: 1.0.0
+  created_at: '2026-10-27'
+  params:
+    min_hours:
+      value: 2
+      min: 0
+      max: 48
+    max_hours:
+      value: 12
+      min: 1
+      max: 72
+    price_min:
+      value: 0.35
+      min: 0.05
+      max: 0.9
+    price_max:
+      value: 0.65
+      min: 0.1
+      max: 0.95
+    shift:
+      value: 0.05
+      min: 0.0
+      max: 0.2
+    uncertainty:
+      value: 0.01
+      min: 0.0
+      max: 0.1
+    min_net_edge:
+      value: 0.01
+      min: 0.0
+      max: 0.2
+    max_candidates:
+      value: 60
+      min: 0
+      max: 200
+    max_extra_ticks:
+      value: 1
+      min: 0
+      max: 5
+    max_proposals_per_cycle:
+      value: 3
+      min: 0
+      max: 20
+    kelly_fraction:
+      value: 0.5
+      min: 0.0
+      max: 2.0
+non_aux_drames:
+  class: non_aux_drames
+  enabled: true
+  version: 1.0.0
+  created_at: '2026-10-23'
+  params:
+    min_days:
+      value: 30
+      min: 7
+      max: 365
+    max_days:
+      value: 120
+      min: 14
+      max: 900
+    yes_min:
+      value: 0.02
+      min: 0.005
+      max: 0.3
+    yes_max:
+      value: 0.15
+      min: 0.01
+      max: 0.4
+    min_volume:
+      value: 5000
+      min: 0
+      max: 10000000
+    yes_factor:
+      value: 0.5
+      min: 0.0
+      max: 1.0
+    uncertainty:
+      value: 0.01
+      min: 0.0
+      max: 0.1
+    stake_fraction:
+      value: 0.02
+      min: 0.0
+      max: 0.1
+    min_net_edge:
+      value: 0.005
+      min: 0.0
+      max: 0.2
+    max_candidates:
+      value: 40
+      min: 0
+      max: 200
+    max_extra_ticks:
+      value: 1
+      min: 0
+      max: 5
+    max_proposals_per_cycle:
+      value: 2
+      min: 0
+      max: 20
+cross_market:
+  enabled: true
+  version: 1.0.0
+  created_at: '2026-10-15'
+  params:
+    min_net_edge:
+      value: 0.005
+      min: 0.0
+      max: 0.1
+    stake_fraction:
+      value: 0.2
+      min: 0.0
+      max: 1.0
+    max_proposals_per_cycle:
+      value: 3
+      min: 0
+      max: 50
+  class: cross_market
+echelle_dates:
+  enabled: true
+  version: 1.0.0
+  created_at: '2026-10-20'
+  params:
+    min_net_edge:
+      value: 0.005
+      min: 0.0
+      max: 0.1
+    stake_fraction:
+      value: 0.1
+      min: 0.0
+      max: 0.5
+    max_proposals_per_cycle:
+      value: 2
+      min: 0
+      max: 20
+  class: echelle_dates
+rallies_non:
+  class: naive_favorite
+  filtres:
+    issue:
+    - non
+    prix_min: 0.3
+    prix_max: 0.5
+    echeance_min: 3
+    echeance_max: 20
+    question_contient:
+    - rally
+    question_exclut:
+    - + times
+  enabled: true
+  version: 1.0.0
+  created_at: '2026-10-26'
+  params:
+    min_ask:
+      value: 0.3
+      min: 0.1
+      max: 0.97
+    max_ask:
+      value: 0.5
+      min: 0.4
+      max: 0.98
+    underdog:
+      value: 1
+      min: 0
+      max: 1
+    bias:
+      value: 0.05
+      min: 0.0
+      max: 0.06
+    uncertainty:
+      value: 0.015
+      min: 0.01
+      max: 0.1
+    min_net_edge:
+      value: 0.005
+      min: 0.0
+      max: 0.5
+    max_extra_ticks:
+      value: 2
+      min: 0
+      max: 5
+    max_proposals_per_cycle:
+      value: 6
+      min: 0
+      max: 50
+    kelly_fraction:
+      value: 0.25
+      min: 0.0
+      max: 5.0
+rallies_non_favori:
+  class: naive_favorite
+  filtres:
+    issue:
+    - non
+    prix_min: 0.5
+    prix_max: 0.6
+    echeance_min: 3
+    echeance_max: 20
+    question_contient:
+    - rally
+    question_exclut:
+    - + times
+  enabled: true
+  version: 1.0.0
+  created_at: '2026-10-26'
+  params:
+    min_ask:
+      value: 0.5
+      min: 0.1
+      max: 0.97
+    max_ask:
+      value: 0.6
+      min: 0.4
+      max: 0.98
+    bias:
+      value: 0.05
+      min: 0.0
+      max: 0.06
+    uncertainty:
+      value: 0.015
+      min: 0.01
+      max: 0.1
+    min_net_edge:
+      value: 0.005
+      min: 0.0
+      max: 0.5
+    max_extra_ticks:
+      value: 2
+      min: 0
+      max: 5
+    max_proposals_per_cycle:
+      value: 6
+      min: 0
+      max: 50
+    kelly_fraction:
+      value: 0.25
+      min: 0.0
+      max: 5.0
+mentions_non:
+  class: naive_favorite
+  filtres:
+    issue:
+    - non
+    prix_min: 0.5
+    prix_max: 0.7
+    echeance_min: 3
+    echeance_max: 48
+    question_contient:
+    - ' say '
+    - mention
+    question_exclut:
+    - rally
+    - announcer
+    - commentator
+    - + times
+  enabled: true
+  version: 1.0.0
+  created_at: '2026-10-26'
+  params:
+    min_ask:
+      value: 0.5
+      min: 0.1
+      max: 0.97
+    max_ask:
+      value: 0.7
+      min: 0.4
+      max: 0.98
+    bias:
+      value: 0.04
+      min: 0.0
+      max: 0.06
+    uncertainty:
+      value: 0.015
+      min: 0.01
+      max: 0.1
+    min_net_edge:
+      value: 0.005
+      min: 0.0
+      max: 0.5
+    max_extra_ticks:
+      value: 2
+      min: 0
+      max: 5
+    max_proposals_per_cycle:
+      value: 6
+      min: 0
+      max: 50
+    kelly_fraction:
+      value: 0.25
+      min: 0.0
+      max: 5.0
+mentions_non_outsider:
+  class: naive_favorite
+  filtres:
+    issue:
+    - non
+    prix_min: 0.4
+    prix_max: 0.5
+    echeance_min: 3
+    echeance_max: 48
+    question_contient:
+    - ' say '
+    - mention
+    question_exclut:
+    - rally
+    - announcer
+    - commentator
+    - + times
+  enabled: true
+  version: 1.0.0
+  created_at: '2026-10-26'
+  params:
+    min_ask:
+      value: 0.4
+      min: 0.1
+      max: 0.97
+    max_ask:
+      value: 0.5
+      min: 0.4
+      max: 0.98
+    underdog:
+      value: 1
+      min: 0
+      max: 1
+    bias:
+      value: 0.04
+      min: 0.0
+      max: 0.06
+    uncertainty:
+      value: 0.015
+      min: 0.01
+      max: 0.1
+    min_net_edge:
+      value: 0.005
+      min: 0.0
+      max: 0.5
+    max_extra_ticks:
+      value: 2
+      min: 0
+      max: 5
+    max_proposals_per_cycle:
+      value: 6
+      min: 0
+      max: 50
+    kelly_fraction:
+      value: 0.25
+      min: 0.0
+      max: 5.0
+statu_quo_ia:
+  class: naive_favorite
+  filtres:
+    question_contient:
+    - best ai model
+    issue:
+    - oui
+    echeance_min: 288
+    echeance_max: 840
+  enabled: true
+  version: 1.1.0
+  created_at: '2026-10-21'
+  params:
+    min_ask:
+      value: 0.7
+      min: 0.5
+      max: 0.97
+    max_ask:
+      value: 0.95
+      min: 0.6
+      max: 0.98
+    bias:
+      value: 0.05
+      min: 0.0
+      max: 0.06
+    uncertainty:
+      value: 0.015
+      min: 0.01
+      max: 0.1
+    min_net_edge:
+      value: 0.01
+      min: 0.0
+      max: 0.5
+    max_extra_ticks:
+      value: 2
+      min: 0
+      max: 5
+    max_proposals_per_cycle:
+      value: 3
+      min: 0
+      max: 50
+    kelly_fraction:
+      value: 0.5
+      min: 0.0
+      max: 5.0
+detroits_non_normal:
+  class: naive_favorite
+  filtres:
+    issue:
+    - non
+    question_contient:
+    - traffic returns to normal
+    echeance_min: 240
+    prix_min: 0.8
+    prix_max: 0.95
+  enabled: true
+  version: 1.0.0
+  created_at: '2026-10-25'
+  params:
+    min_ask:
+      value: 0.8
+      min: 0.5
+      max: 0.97
+    max_ask:
+      value: 0.95
+      min: 0.6
+      max: 0.98
+    bias:
+      value: 0.03
+      min: 0.0
+      max: 0.06
+    uncertainty:
+      value: 0.01
+      min: 0.01
+      max: 0.1
+    min_net_edge:
+      value: 0.005
+      min: 0.0
+      max: 0.5
+    max_extra_ticks:
+      value: 2
+      min: 0
+      max: 5
+    max_proposals_per_cycle:
+      value: 3
+      min: 0
+      max: 50
+    kelly_fraction:
+      value: 0.25
+      min: 0.0
+      max: 5.0
+ia_oui_sorties:
+  class: naive_favorite
+  filtres:
+    issue:
+    - oui
+    prix_min: 0.1
+    prix_max: 0.4
+    echeance_min: 24
+    echeance_max: 720
+    question_contient:
+    - ' ai '
+    - gpt
+    - openai
+    - anthropic
+    - gemini
+    - claude
+    - grok
+    - llama
+    - deepseek
+    - mythos
+    - chatgpt
+    - qwen
+    - mistral
+    - muse spark
+    - glm
+    - xai
+    question_exclut:
+    - outage
+    - app store
+    - '#1'
+    - no next
+    - not be
+    - no new
+    - no ai
+  enabled: true
+  version: 1.0.0
+  created_at: '2026-10-27'
+  params:
+    min_ask:
+      value: 0.1
+      min: 0.05
+      max: 0.97
+    max_ask:
+      value: 0.4
+      min: 0.3
+      max: 0.98
+    underdog:
+      value: 1
+      min: 0
+      max: 1
+    bias:
+      value: 0.08
+      min: 0.0
+      max: 0.1
+    uncertainty:
+      value: 0.02
+      min: 0.01
+      max: 0.1
+    min_net_edge:
+      value: 0.005
+      min: 0.0
+      max: 0.5
+    max_extra_ticks:
+      value: 2
+      min: 0
+      max: 5
+    max_proposals_per_cycle:
+      value: 3
+      min: 0
+      max: 50
+    kelly_fraction:
+      value: 1.0
+      min: 0.0
+      max: 5.0

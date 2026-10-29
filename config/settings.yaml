@@ -14,10 +14,10 @@ paths:
   antecedents: archives/labo_origine/nf_sport_patiente_prix_850_875_v1.0.0.jsonl.gz
 
 cycle:
-  # 29/10/2026 : 2 = intervalle entre deux cycles (cron-job.org réglé toutes les 2 min par Etienne). Sert aux identifiants
-  # d'opération idempotents (une même décision, relancée dans le même créneau, n'est jamais comptée deux fois) et au
-  # rythme d'archivage du scan complet. À garder égal à l'intervalle de cron-job.org.
-  bucket_minutes: 2
+  # 5 = intervalle entre deux cycles, comme dans l'ancien labo (cron-job.org toutes les 5 min, décision d'Etienne du
+  # 29/10/2026). Sert aux identifiants d'opération idempotents (une même décision, relancée dans le même créneau, n'est
+  # jamais comptée deux fois) et au rythme d'archivage du scan complet. À garder égal à l'intervalle de cron-job.org.
+  bucket_minutes: 5
   reglements_par_lot: 100      # 21/10/2026 : marchés détenus lus par lots de 100 pour les règlements (723 requêtes → ~16)
 
 
@@ -64,6 +64,7 @@ http:
   min_interval_seconds: 0.2    # politesse envers les API publiques
   user_agent: "polymarket-autonomous-lab/0.1 (paper trading research; no real orders)"
 
+# Scanner : réglages EXACTS de l'ancien labo (29/10/2026), pages supplémentaires comprises : le fantôme voyait ces marchés.
 scanner:
   page_size: 100               # maximum accepté par Gamma (vérifié le 14/10/2026)
   max_pages: 15                # jusqu'à 1 500 marchés lus par cycle (décision d'Etienne, 15/10/2026)
@@ -73,8 +74,68 @@ scanner:
   min_volume_24h: 1000
   max_spread: 0.05
   max_favorite_price: 0.99     # au-delà, l'issue est pratiquement connue : rien à gagner
-  watchlist_size: 150          # marchés suivis en détail (carnets) à chaque cycle : les plus échangés
+  watchlist_size: 150          # marchés suivis en détail (carnets, actualités) à chaque cycle
   full_snapshot_every_minutes: 30   # archiver tout le scan seulement toutes les 30 min
+  holding_pages: 1             # 19/10/2026 : 100 marchés longs de plus (récompense de détention, parking_politique)
+  holding_max_horizon_days: 900
+  # 21/10/2026 (« réveiller les muettes », experiments/muettes.md) : 1 000 marchés longs de toutes sortes
+  # (31 à 900 jours), seulement pour les stratégies qui les demandent (échelles de dates, implication
+  # politique, échelles de seuils, jumeaux…). Volume du jour exigé plus bas : un marché de 2028
+  # s'échange peu chaque jour, son carnet décide de toute façon de ce qui s'exécute.
+  long_pages: 10
+  long_max_horizon_days: 900
+  long_min_volume_24h: 100
+  ended_pages: 1               # 20/10/2026 : 100 marchés échus depuis 1 à 72 h (apres_echeance)
+  # 21/10/2026 : marchés « mentions » (peu de volume, absents des pages normales : mots_prononces,
+  # mots_nouveaux). 176 ouverts ce jour-là, 56 passent ces filtres propres (liquidité médiane 170 $).
+  # 21/10/2026 (soir) : marchés « données économiques » (emplois : étiquette nfp 102964 ; CPI : étiquette cpi 101701) : 400-2 000 $ de liquidité et
+  # ~0-700 $ de volume par jour, donc écartés par min_volume_24h ; `cpi_tranches` et `jobs_favori_non` ne voyaient aucun marché (0 achat, abstentions vides).
+  tag_pages: {100343: {pages: 2, min_liquidity: 100, min_volume_24h: 0, max_spread: 0.10},
+              102964: {pages: 1, min_liquidity: 300, min_volume_24h: 0, max_spread: 0.10},
+              101701: {pages: 1, min_liquidity: 300, min_volume_24h: 0, max_spread: 0.10},
+              # 23/10/2026 : étiquette bab-el-mandeb (105617), tranches « average daily transits » : 191-546 $ de volume par jour
+              # pour 3 tranches sur 5 (sous min_volume_24h), donc invisibles ; `detroits_tranches` les demande.
+              105617: {pages: 1, min_liquidity: 300, min_volume_24h: 0, max_spread: 0.10},
+              # 23/10/2026 : étiquette hormuz (104139) : tranches hebdomadaires et mensuelles d'Ormuz ET de Bab el-Mandeb (40 marchés
+              # PortWatch sur 74 dans les 30 jours) ; sans elle, `detroits_marche_log` ne voyait aucun marché d'Ormuz.
+              104139: {pages: 1, min_liquidity: 300, min_volume_24h: 0, max_spread: 0.10},
+              # 24/10/2026 : étiquette earthquakes (103038) : « plus gros séisme du jour » et « combien de séismes cette semaine » (seismes_marche), 240-900 $ de liquidité
+              103038: {pages: 1, min_liquidity: 200, min_volume_24h: 0, max_spread: 0.15},
+              # 24/10/2026 : étiquette box-office (51), tranches de recettes du premier week-end (`box_office_favori`)
+              51: {pages: 1, min_liquidity: 0, min_volume_24h: 0, max_spread: 0.60},
+              # 27/10/2026 : événements « à initiés » (suivre_inities) : prix (Awards 18), émissions (Reality TV 100339), classements
+              # (Music 100) ; les marchés de place exacte du Ballon d'Or 2026 (43-193 k$ de volume) n'étaient pas dans le scan.
+              18: {pages: 2, min_liquidity: 200, min_volume_24h: 0, max_spread: 0.15},
+              100339: {pages: 1, min_liquidity: 200, min_volume_24h: 0, max_spread: 0.15},
+              100: {pages: 1, min_liquidity: 200, min_volume_24h: 0, max_spread: 0.15},
+              # 27/10/2026 : étiquette app-store (970), « #1 Free / Paid App in the US Apple App Store on <date> » (`classement_appstore`) : ~1 400 $ de liquidité par événement, 12-13 marchés
+              970: {pages: 1, min_liquidity: 0, min_volume_24h: 0, max_spread: 0.60},
+              # 27/10/2026 : étiquette ai (439), « <modèle> released by <date> » (`ia_oui_sorties`) : ~460 marchés « by », 10-180 k$ de volume, 100-6 000 $ de liquidité chacun
+              439: {pages: 3, min_liquidity: 50, min_volume_24h: 0, max_spread: 0.30},
+              # 24/10/2026 : étiquette spacex (63), compteurs « How many SpaceX launches in <mois / année> » (`spacex_cumul`) : 100-6 600 $ de liquidité par tranche, des tranches déjà cotées 0,99 (que la stratégie veut voir), l'année finit dans 68 jours
+              63: {pages: 1, min_liquidity: 0, min_volume_24h: 0, max_spread: 0.60, max_favorite_price: 0.9999, max_horizon_hours: 2400},
+              # 24/10/2026 : étiquettes gold (101589) et silver (100733), échelles « What will Gold / Silver hit Week of … » (`toucher_metaux`), 100-3 000 $ de liquidité par barre
+              # (l'étiquette pyth-finance 104466 mêle 25 actifs : 300 marchés en 3 pages, un seul de l'or)
+              101589: {pages: 1, min_liquidity: 0, min_volume_24h: 0, max_spread: 0.60},
+              100733: {pages: 1, min_liquidity: 0, min_volume_24h: 0, max_spread: 0.60},
+              # 24/10/2026 : étiquette midterms (102289), champs de candidats des élections du 03/11 (« Will X win the 2026 Alaska governor election? », 13 à 40 candidats,
+              # 17 000-130 000 $ de volume par candidat) pour `candidats_non` ; les gros marchés (parti qui gagne la Chambre…) étaient déjà vus, pas les candidats un par un.
+              102289: {pages: 12, min_liquidity: 1000, min_volume_24h: 0, max_spread: 0.10, max_horizon_hours: 480},
+              # 28/10/2026 : étiquette crypto-prices (1312), échelles du jour « <actif> price on <date> ? » (11 tranches, fix de 12 h heure de l'Est) pour `tranche_centrale_non` ; sans elle la
+              # stratégie voyait 0 marché (abstentions {}). Horizon de 8 h seulement (les « up or down » fournissent la moitié des 300 marchés des 3 pages triées par volume 24 h : à 26 h d'horizon, 26 tranches).
+              1312: {pages: 3, min_liquidity: 0, min_volume_24h: 0, max_spread: 0.30, max_horizon_hours: 8}}
+  # Séries de sport (23/10/2026, piste « moins de cartes », experiments/pistes_sport_coherence.md) : matchs
+  # d'e-sport en 2 ou 3 manches gagnantes ; seuls les marchés « Games Total » (type totals), vus par qui les demande.
+  series_pages:
+    10310: {types: [totals], titre_contient: ["(BO3)", "(BO5)"], min_liquidity: 0, min_volume_24h: 0, max_spread: 0.20}
+    # 27/10/2026 : LoL aussi pour les totaux de kills par partie (`kill_over_under_game`, `moins_de_kills`, experiments/lol_kills.md) : 3 à 6 lignes par partie, ~600 $ de volume chacune.
+    10311: {types: [totals, kill_over_under_game], titre_contient: ["(BO3)", "(BO5)"], min_liquidity: 0, min_volume_24h: 0, max_spread: 0.20}
+    10309: {types: [totals], titre_contient: ["(BO3)", "(BO5)"], min_liquidity: 0, min_volume_24h: 0, max_spread: 0.20}
+    10369: {types: [totals], titre_contient: ["(BO3)", "(BO5)"], min_liquidity: 0, min_volume_24h: 0, max_spread: 0.20}
+  ended_min_hours: 1
+  ended_max_hours: 72
+  max_extra_markets: 600       # marchés demandés par les stratégies (météo 100, tenue de marché 30, politique 40, sport 30, crypto 30) ; doublons comptés une fois
+                               # 21/10/2026 : 320 → 600 (pages longues et filles à mots-clés, experiments/muettes.md)
 
 database:
   max_megabytes: 40
