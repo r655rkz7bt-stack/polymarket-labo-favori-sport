@@ -119,8 +119,12 @@ Détail : `docs/EXPLOITATION.md`. Résumé :
   - antécédents : son journal du labo d'origine est relu à chaque cycle (`antecedents.py`, chaîne de hash vérifiée) ;
     ses 85 paris comptent dans la confiance et dans la mise. Sur ce passé : prudence 1 (85 prévisions jugées, avance
     +0,0019), renfort 1 (confiance par jour 78 % < 80 %), donc Kelly × 1, comme à la fin de son journal ;
-  - capital : reprise à 1 472,59 € (sa dernière valeur signée) par une remise à zéro qu'Etienne seul peut faire :
-    `proposals/2026-10-29_reprise_du_fantome.md` ; le tableau de bord enchaîne alors sa courbe et celle d'ici ;
-  - vérifié : 263 tests verts, cycle local réel (facteur de mise 1,0), reprise simulée en local, courbes du tableau de bord
-    chargées avec le passé (85 paris, plus haut 1 680 € le 26/10).
+  - capital : il reste à 1 000 € (décision d'Etienne) ; seuls les paris du fantôme comptent (confiance et mise) ;
+  - plus aucune règle propre au capital principal de l'ancien labo (mise ≤ 10 %, plafond par famille, réserve de 3 %,
+    copie, annulation au coup d'envoi) ;
+  - différences d'environnement restantes avec l'ancien fantôme : cycle toutes les 2 min (5 dans l'ancien labo) et
+    marchés observés (l'ancien fantôme voyait aussi les marchés demandés par ses voisines, ex. `outsider_sport_patiente`,
+    `outsider_itf`, et ceux des pages par étiquette du scanner : 86 marchés achetés, surtout e-sport et tennis ITF peu
+    échangés ; ici, seulement les 150 plus échangés). Décision d'Etienne attendue ;
+  - vérifié : 262 tests verts, cycle local réel (facteur de mise 1,0).
 

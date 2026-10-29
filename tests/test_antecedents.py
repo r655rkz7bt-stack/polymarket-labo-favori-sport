@@ -1,4 +1,4 @@
-"""Reprise de l'ancien fantôme (29/10/2026) : antécédents relus, mise aux règles du fantôme, suite du capital."""
+"""Mêmes conditions que l'ancien fantôme (29/10/2026) : antécédents relus, mise aux règles du fantôme, capital à 1 000 €."""
 
 from __future__ import annotations
 
@@ -13,7 +13,6 @@ from polymarket_agent.config import load_settings
 from polymarket_agent.ledger import Ledger
 from polymarket_agent.main import run_cycle
 from polymarket_agent.persistence import Database
-from polymarket_agent.reporting import read_entries
 from test_cycle import FakeClob, FakeGamma, env, make_book  # noqa: F401 - `env` : fixture partagée
 
 ARCHIVE = ROOT / "archives" / "labo_origine" / "nf_sport_patiente_prix_850_875_v1.0.0.jsonl.gz"
@@ -81,24 +80,16 @@ def test_the_cycle_bets_like_the_ghost_would_with_its_past(env, paths):
     assert whole > half * D("1.5")  # même pari, mise du fantôme prouvé (le capital a un peu baissé entre-temps)
 
 
-def test_the_dashboard_chains_the_past_once_the_capital_resumes(tmp_path):
+def test_the_dashboard_counts_the_past_but_the_capital_starts_at_1000(tmp_path):
+    """29/10/2026 (Etienne) : le capital repart de 1 000 € ; les 85 paris du fantôme comptent dans la confiance."""
     rows = antecedents.load(ARCHIVE)
     live = Ledger.create(tmp_path / "l.jsonl", KEY, tmp_path / "l.lock", "1000", now=NOW + timedelta(days=15))
     db = Database(tmp_path / "db.sqlite")
     data = dashboard.collect(live, db, {"cycle": {"bucket_minutes": 2}}, ROOT, now=NOW + timedelta(days=15), history=rows)
     conf = data["strategie"]["confiance"]
-    assert conf["operations"] == 85 and conf["anterieures"] == 85 and conf["reprise"] is False
-    assert data["capital_initial"] == 1000.0 and len(data["courbe"]) == 1  # pas encore repris : courbe d'ici seulement
+    assert conf["operations"] == 85 and conf["anterieures"] == 85 and conf["antecedents_fin"] == "2026-10-28T23:42"
+    assert data["capital_initial"] == 1000.0 and data["capital"]["capital_total_estime"] == "1000.0000"
+    assert len(data["courbe"]) == 1  # la courbe du capital est celle d'ici seulement
     assert "aux conditions de son ancien fantôme" in data["situation"]["phrase"]
-    assert not antecedents.resumed(rows, read_entries(live))
-    # Etienne reprend le capital à la dernière valeur signée du fantôme (workflow reset-capital).
-    live.reset(provided_code="code-de-test", expected_code="code-de-test", reason="reprise de l'ancien fantôme",
-               initial_capital="1472.59", now=NOW + timedelta(days=15, minutes=1))
-    assert antecedents.resumed(rows, read_entries(live))
-    data = dashboard.collect(live, db, {"cycle": {"bucket_minutes": 2}}, ROOT, now=NOW + timedelta(days=15), history=rows)
-    assert data["capital_initial"] == 1000.0 and data["courbe"][0][1] == 1000.0 and data["courbe"][-1][1] == 1472.59
-    assert data["strategie"]["confiance"]["reprise"] is True
-    assert "reprend la suite de son ancien fantôme" in data["situation"]["phrase"]
-    fiche = dashboard.fiche(ROOT)
-    assert fiche["antecedents"].endswith("/main/archives/labo_origine/nf_sport_patiente_prix_850_875_v1.0.0.jsonl.gz")
+    assert "dont 85 dans son ancien fantôme" in data["situation"]["detail"]
     db.close()

@@ -3,10 +3,8 @@
 Décision d'Etienne (29/10/2026) : « mets les mêmes conditions que sur l'ancien fantôme, comme si c'était un fantôme et
 que tu reprenais la suite juste après son passé dans l'autre labo ». Le journal d'origine (archives/labo_origine/) est
 signé avec la clé de l'autre labo : il ne s'importe pas dans le journal signé d'ici. Il est relu comme ANTÉCÉDENTS :
-- ses paris terminés comptent dans les indices de confiance et dans la santé de la stratégie (mise prudente, renfort,
-  suspension : sante.py), comme si le fantôme continuait ;
-- sa courbe de capital précède celle d'ici sur le tableau de bord, une fois le capital principal repris à sa valeur
-  (workflow reset-capital, voir docs/CONTEXTE.md §6).
+ses paris terminés comptent dans les indices de confiance et dans la santé de la stratégie (mise prudente, renfort,
+suspension : sante.py), comme si le fantôme continuait. Le capital, lui, repart de 1 000 € (décision d'Etienne).
 Garde-fou : la chaîne de hash est revérifiée (chaque ligne porte le hash de la précédente) ; la signature ne peut pas
 l'être sans la clé de l'autre labo. Un fichier absent, illisible ou à la chaîne cassée donne « aucun antécédent ».
 """
@@ -56,14 +54,7 @@ def since_last_start(entries: list[dict]) -> list[dict]:
 
 
 def trades(history: list[dict], live: list[dict]) -> list[dict]:
-    """Paris terminés des antécédents puis du journal d'ici (époque en cours), dans l'ordre. Une position encore
-    ouverte à la fin des antécédents n'est jamais terminée ici (elle a été comptée à sa valeur de revente)."""
+    """Paris terminés des antécédents puis du journal d'ici (époque en cours), dans l'ordre. La position encore
+    ouverte à la fin des antécédents (« FUT gagne le PGL Masters Bucarest : NON ») n'est jamais terminée ici."""
     return closed_trades(history) + closed_trades(since_last_start(live))
 
-
-def resumed(history: list[dict], live: list[dict]) -> bool:
-    """Vrai si le capital principal a repris la suite : une remise à zéro (RESET) postérieure aux antécédents."""
-    if not history:
-        return False
-    end = history[-1]["ts"]
-    return any(e.get("type") == "RESET" and e["ts"] >= end for e in live)

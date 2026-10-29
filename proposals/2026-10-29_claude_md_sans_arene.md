@@ -16,9 +16,6 @@ Remplacer la phrase « But : … » par :
 > conditions de son ancien fantôme et en reprenant la suite de son passé, et suivre ses indices de confiance ; un
 > changement de réglage (filtres, mises, exécution) s'applique à ce capital et sa date est notée dans `docs/CONTEXTE.md`.
 
-et, si la reprise du capital est faite (`proposals/2026-10-29_reprise_du_fantome.md`), remplacer « Capital initial :
-1 000 € virtuels » par « Capital : 1 000 € virtuels au départ du fantôme (20/10/2026), repris à 1 472,59 € le 29/10/2026 ».
-
 et, dans « Liberté », remplacer « arène et ses règles » par « réglages et plafonds du capital principal ».
 
 ## Comment faire (Etienne)

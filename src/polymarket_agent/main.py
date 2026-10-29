@@ -371,21 +371,6 @@ def _execute(deps: CycleDeps, portfolio: Portfolio, watchlist: list[MarketInfo],
             deps.db.save_decision(report.cycle_id, deps.now(), proposal, verdict)
             log.info("rejet après relecture %s : %s", proposal.op_id, drop)
             continue
-        room = _cash_room(deps, portfolio)
-        if room is not None and Decimal(verdict.checks.get("cost_bound", "0")) > room:
-            # Réserve de liquidités (27/10/2026) : l'achat est réduit à ce qui reste au-dessus de la réserve, sinon abandonné.
-            per_share = Decimal(verdict.checks["cost_bound"]) / proposal.shares
-            shares = (room / per_share).quantize(Decimal("0.01"), rounding=ROUND_DOWN) if room > 0 else Decimal("0")
-            if shares > 0:
-                proposal = dataclasses.replace(proposal, shares=shares)
-                verdict = evaluate(proposal, ledger.state, market_context(market, fresh, proposal.token_id),
-                                   deps.limits, deps.now(), marks)
-            if shares <= 0 or not verdict.accepted:
-                verdict.accepted = False
-                verdict.reasons.append(f"réserve de liquidités : {max(room, Decimal('0')):.2f} disponibles au-dessus de la réserve")
-                deps.db.save_decision(report.cycle_id, deps.now(), proposal, verdict)
-                log.info("%s abandonné : réserve de liquidités", proposal.op_id)
-                continue
         key = (proposal.token_id, "BUY")
         fill = simulate_buy(fresh, proposal.shares, proposal.max_price, market.fees,
                             portfolio.taken.get(key, Decimal("0")))
@@ -564,17 +549,6 @@ def _cap_stake(deps: CycleDeps, portfolio: Portfolio, proposals: list[Proposal])
     return out
 
 
-def _cash_room(deps: CycleDeps, portfolio: Portfolio) -> Decimal | None:
-    """Argent disponible AU-DESSUS de la réserve de liquidités (27/10/2026, `principal.reserve_liquidites`, part du
-    capital estimé), ou None sans réserve. Règle n°1 : la faillite tombe dès que le SOLDE DISPONIBLE touche 0, même si
-    les positions valent quelque chose ; ce coussin empêche qu'un achat le vide par accident."""
-    share = (deps.settings.get("principal") or {}).get("reserve_liquidites")
-    if not share:
-        return None
-    state = portfolio.ledger.state
-    return state.cash - Decimal(str(share)) * state.total_estimated(portfolio.marks)
-
-
 # --------------------------------------------------------------------------- ordres posés
 
 def _place_resting(deps: CycleDeps, portfolio: Portfolio, orders: list[Proposal],
@@ -611,11 +585,9 @@ def _place_resting(deps: CycleDeps, portfolio: Portfolio, orders: list[Proposal]
             # Réservation : les achats posés ne peuvent pas promettre plus que le solde disponible.
             reserved = sum((Decimal(o["remaining"]) * Decimal(json.loads(o["proposal"])["max_price"])
                             for o in others if o["side"] == "BUY"), Decimal("0"))
-            room = _cash_room(deps, portfolio)
-            if reserved + Decimal(verdict.checks.get("cost_bound", "0")) > (ledger.state.cash if room is None else room):
+            if reserved + Decimal(verdict.checks.get("cost_bound", "0")) > ledger.state.cash:
                 verdict.accepted = False
-                verdict.reasons.append(f"solde déjà réservé par les ordres posés ({reserved:.2f})"
-                                       + ("" if room is None else " ou réserve de liquidités"))
+                verdict.reasons.append(f"solde déjà réservé par les ordres posés ({reserved:.2f})")
         verdict.checks["order_type"] = "limite"
         if verdict.accepted:
             hours = min(max(float(order.horizon_hours), 0.0), max_age)
@@ -665,10 +637,6 @@ def _fill_resting(deps: CycleDeps, portfolio: Portfolio, by_market: dict[str, Ma
         verdict = evaluate(part, ledger.state, market_context(market, book, part.token_id),
                            deps.limits, now, portfolio.marks)
         verdict.checks["order_type"] = "limite"
-        room = _cash_room(deps, portfolio)
-        if verdict.accepted and room is not None and fill.filled_shares * proposal.max_price + fill.fee > room:
-            verdict.accepted = False  # l'ordre reste posé ; il sera servi quand l'argent sera revenu
-            verdict.reasons.append(f"réserve de liquidités : {max(room, Decimal('0')):.2f} disponibles au-dessus de la réserve")
         if not verdict.accepted:
             deps.db.save_decision(report.cycle_id, now, part, verdict, fill)
             log.info("exécution d'ordre posé refusée %s : %s", part.op_id, verdict.reasons)

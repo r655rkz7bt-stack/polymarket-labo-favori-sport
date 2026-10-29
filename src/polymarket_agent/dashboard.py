@@ -90,10 +90,8 @@ def fiche(root: Path, settings: dict | None = None) -> dict:
         raw = yaml.safe_load((Path(root) / "config" / "dashboard.yaml").read_text(encoding="utf-8")) or {}
     except (OSError, yaml.YAMLError):
         raw = {}
-    raw = raw if isinstance(raw, dict) else {}
-    url, past = str(raw.get("journaux_url") or ""), str(raw.get("antecedents_url") or "")
-    return {"journaux": url if url.startswith(RAW_PREFIX) and url.endswith("/") else "",
-            "antecedents": past if past.startswith(RAW_PREFIX) and past.endswith(".jsonl.gz") else ""}
+    url = str((raw if isinstance(raw, dict) else {}).get("journaux_url") or "")
+    return {"journaux": url if url.startswith(RAW_PREFIX) and url.endswith("/") else ""}
 
 
 def principal_orders(entries: list[dict], questions: dict[str, str], open_orders: list[dict],
@@ -185,16 +183,14 @@ def situation(capital: dict, strategies: list[dict], conf: dict) -> dict:
         past = (f", dont {conf['anterieures']} dans son ancien fantôme" if conf.get("anterieures") else "")
         detail = (f"{conf['operations']} paris terminés{past} : {conf['gagnees']} gagnés pour {_fr(conf['attendues'])} "
                   f"attendus d'après les prix payés ; confiance {conf['confiance_pct']} % ({conf['verdict']}).")
-    phrase = f"Le capital principal est tradé par {names}"
-    phrase += (", qui reprend la suite de son ancien fantôme." if conf.get("reprise") else
-               (" aux conditions de son ancien fantôme." if conf.get("anterieures") else "."))
+    phrase = f"Le capital principal est tradé par {names}" + (" aux conditions de son ancien fantôme."
+                                                               if conf.get("anterieures") else ".")
     return {"phrase": phrase, "detail": detail}
 
 
 def collect(main: Ledger, db, settings: dict, root: Path, now: datetime | None = None,
             history: list[dict] | None = None) -> dict:
-    """`history` : antécédents de la stratégie (antecedents.load). Leurs paris terminés comptent toujours dans la
-    confiance ; leur courbe précède celle d'ici une fois le capital repris à leur valeur (antecedents.resumed)."""
+    """`history` : antécédents de la stratégie (antecedents.load) : leurs paris terminés comptent dans la confiance."""
     now = now or datetime.now(timezone.utc)
     history = history or []
     state = main.state
@@ -203,14 +199,9 @@ def collect(main: Ledger, db, settings: dict, root: Path, now: datetime | None =
     marks = _marks(db, state.positions)
     entries = read_entries(main)
     trades = closed_trades(entries)
-    resumed = antecedents.resumed(history, entries)
 
-    # --- capital principal et cliquet (précédé de la courbe des antécédents une fois la suite reprise)
+    # --- capital principal et cliquet
     curve = equity_curve(entries)
-    initial = float(state.initial_capital)
-    if resumed:
-        curve = equity_curve(history) + equity_curve(antecedents.since_last_start(entries))
-        initial = float(history[0]["data"]["initial_capital"])
     capital = {k: str(v) for k, v in state.summary(marks).items()}
     capital.update({"capital_realise": str(state.realized_capital().quantize(Decimal("0.01"))),
                     "palier_suivant": str(state.next_target),
@@ -221,7 +212,7 @@ def collect(main: Ledger, db, settings: dict, root: Path, now: datetime | None =
     info = strategy_info(root)
     past = closed_trades(history)
     conf = dict(confiance.summary(antecedents.trades(history, entries)), anterieures=len(past),
-                antecedents_fin=history[-1]["ts"][:16] if history else None, reprise=resumed)
+                antecedents_fin=history[-1]["ts"][:16] if history else None)
     strategies = list(info.values())
 
     # --- positions ouvertes, avec prévision et incertitude
@@ -306,7 +297,7 @@ def collect(main: Ledger, db, settings: dict, root: Path, now: datetime | None =
         "capital": capital,
         "courbe": _downsample(curve, 600),  # 21/10/2026 : assez de points pour la vue « 24 h »
         "paliers": state.milestones,
-        "capital_initial": initial,
+        "capital_initial": float(state.initial_capital),
         "strategie": {"strategies": strategies, "confiance": conf, "sante": sante.load(db),
                       "abstentions": abstentions.get("strategies") or {}},
         "positions": positions,

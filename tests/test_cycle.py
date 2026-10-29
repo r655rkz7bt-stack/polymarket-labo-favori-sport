@@ -276,7 +276,7 @@ def test_repository_config_is_the_single_strategy_with_its_ghost_conditions():
     assert loaded[0].params["kelly_fraction"] == D("1.0")
     assert loaded[0].annuler_au_coup_d_envoi is False  # comme dans l'ancien labo (ses 85 positions mesurées)
     settings = load_settings()
-    assert settings["principal"] == {"max_mise": 0.25}
+    assert settings["principal"] == {"max_mise": 0.25}  # aucune règle du principal de l'ancien labo
     assert settings["sante_strategies"] == {"min_resolved": 20, "base": 0.5, "proven": 1.0, "disproven": 0.25,
                                             "suspension_min_closed": 20,
                                             "renfort": {"min_operations": 30, "confiance_jour_min": 0.8, "paris_fictifs": 30, "max": 2.0}}
@@ -393,31 +393,6 @@ def test_orders_of_the_same_portfolio_share_the_book_in_a_cycle(env, paths, tmp_
     market = parse_market(raw_market())
     _execute(deps, portfolio, [market], {"tokA": good_book()}, CycleReport("c1"), "b1", [market])
     assert ledger.state.positions["tokA"].shares == D("10")  # 10 au total (25 % de 40), pas 20
-
-
-def test_principal_keeps_a_cash_reserve_so_no_bet_can_empty_it(env, tmp_path):
-    """27/10/2026 : la faillite tombe à 0 € DISPONIBLE, même avec des positions qui valent quelque chose. Un achat ne
-    laisse jamais moins de `principal.reserve_liquidites` du capital estimé : réduit à ce qui reste au-dessus, sinon abandonné."""
-    from polymarket_agent.main import CycleReport, Portfolio, _execute
-    from polymarket_agent.sources.polymarket_gamma import parse_market
-    make, _, _ = env
-    deep = make_book("tokA", bids=(("0.89", "5000"),), asks=(("0.90", "5000"),))
-
-    def cash_after(reserve, folder):
-        settings = load_settings()
-        settings["principal"] = dict(settings["principal"], reserve_liquidites=reserve)
-        deps = make(FakeGamma([raw_market()]), FakeClob({"tokA": deep}), settings=settings)
-        folder.mkdir()
-        ledger = Ledger.create(folder / "l.jsonl", KEY, folder / "l.lock", "1000", now=NOW)
-        ledger.record_buy(op_id="avant", token_id="autre", market_id="m-autre", event_id="e-autre", outcome="Yes",
-                          shares="1700", price="0.55", fee="0", strategy_id="s", strategy_version="1", now=NOW)  # 65 € disponibles
-        main = Portfolio("principal", ledger, [pipeline_strategy()])
-        _execute(deps, main, [parse_market(raw_market())], {"tokA": deep}, CycleReport(cycle_id="c1"), "b1")
-        assert "tokA" in ledger.state.positions  # l'achat a bien lieu dans les deux cas
-        return ledger.state.cash
-
-    assert cash_after(None, tmp_path / "sans") < D("1")  # sans réserve : le pari vide presque tout le disponible
-    assert D("30") <= cash_after(0.03, tmp_path / "avec") < D("31")  # 3 % de 1 000 € restent disponibles
 
 
 def test_a_book_reread_is_reused_within_seconds(env):

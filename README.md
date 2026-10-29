@@ -17,7 +17,7 @@ de plusieurs dizaines de stratégies de favoris, une part de son avance peut ven
 - **Un seul portefeuille** (depuis le 29/10/2026, plus d'arène) : la stratégie trade directement le capital principal,
   **aux conditions de son ancien fantôme** (Kelly × prudence × renfort, `sante.py` ; une mise au plus 25 % du capital) et
   en **reprenant la suite de son passé** : son journal du labo d'origine (`archives/labo_origine/`) est relu à chaque
-  cycle (`antecedents.py`).
+  cycle (`antecedents.py`) ; ses paris comptent dans la confiance et la mise, le capital part de 1 000 €.
 - **Indices de confiance** de la stratégie, calculés sur ses paris terminés, passé compris (`confiance.py`) : score t,
   pourcentage, confiance par jour, gagnés contre attendus, verdict.
 - **Règle n°1** : à 0 € disponible, le trading s'arrête définitivement (code protégé `ledger.py`, `safety_controller.py`).

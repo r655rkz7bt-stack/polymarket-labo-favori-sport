@@ -27,8 +27,8 @@ principal:
   # Une mise ≤ 25 % du capital estimé (23/10/2026, `fantomes.max_mise` de l'ancien labo) : Kelly sur un biais fixe de
   # +0,05 misait jusqu'à la moitié du capital sur un seul pari.
   max_mise: 0.25
-  # Pas de réserve de liquidités : le fantôme n'en avait pas (celle du capital principal de l'ancien labo,
-  # `reserve_liquidites: 0.03`, gardait 3 % disponibles). La règle n°1 reste appliquée par ledger.py.
+  # Rien d'autre : aucune règle propre au capital principal de l'ancien labo (mise ≤ 10 %, plafond par famille, réserve
+  # de 3 %, copie, annulation au coup d'envoi). La règle n°1 reste appliquée par ledger.py.
 
 # Santé de la stratégie (sante.py, mêmes réglages que dans l'ancien labo) : mise prudente tant que ses prévisions ne sont
 # pas prouvées meilleures que le marché, renfort si elle prouve plus d'avantage qu'elle n'en suppose, suspension si les
