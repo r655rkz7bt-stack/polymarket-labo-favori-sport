@@ -134,3 +134,9 @@ Détail : `docs/EXPLOITATION.md`. Résumé :
     sont pas reprises ; l'ancien labo continue d'évoluer : `config/voisines.yaml` est sa photo du 29/10/2026 ;
   - vérifié : cycle local réel en 36 s (4 893 marchés, 33 marchés de sport demandés par les voisines, un ordre posé).
 
+- **29/10/2026, mise en production et verrouillage** :
+  - PR #1 fusionnée à 09:47 ; premier cycle du nouveau code à 09:48 (code 0 : 4 895 marchés, 39 demandés par les
+    voisines, mise × 1,0) ; les deux journaux fantômes (`ledger/fantome/`) supprimés de la branche `data` ;
+  - la PR #1 a été fusionnée par `automerge` avant la fin de `tests` (aucune règle sur `main` à ce moment-là ;
+    `guard` et `tests` étaient verts) ; Etienne a alors créé le ruleset `protection-main` (`guard` et `tests` exigés)
+    et coché « Allow auto-merge » : les PR de Claude attendent désormais les deux contrôles avant de se fusionner.
