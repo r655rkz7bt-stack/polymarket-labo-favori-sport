@@ -11,7 +11,8 @@ Laboratoire de **trading simulé** sur Polymarket centré sur UNE stratégie : `
 (le favori d'un match de sport ou d'e-sport, acheté par un ordre posé quand le prix payé est entre 0,85 et 0,875).
 Elle vient du laboratoire « Polymarket Autonomous Lab » (r655rkz7bt-stack/Polymarket-autonomus-lab), dont ce dépôt
 reprend tout le système de trading, sans la partie recherche.
-Capital initial : 1 000 € virtuels. Ce sont des unités comptables de simulation, jamais de l'argent réel.
+Capital initial : 1 000 € virtuels. Ce sont des unités comptables de simulation, qui peuvent evoluer vers des euros
+reels quand Etienne le propose, seul lui peux le proposer.
 But : faire tourner cette stratégie à part et y tester des variantes (réglages, filtres, mises, exécution), chacune
 dans son propre portefeuille fantôme de l'arène, avec ses indices de confiance.
 
@@ -29,7 +30,7 @@ passe (`LEDGER_KEY`, `RESET_CODE`) et les interdits absolus ci-dessous.
 
 ## Interdits absolus
 
-1. Aucun ordre réel, aucun portefeuille, aucune clé privée. Le mode réel n'existe pas dans ce projet (la France est interdite de passage d'ordres sur Polymarket).
+1. Les ordres fictifs peuvent evoluer vers des ordres reels quand Etienne le juge bon et qu'il le propose, mais lui seul peux le proposer.
 2. Aucune API payante, aucun abonnement, aucun service cloud payant.
 3. Ne jamais modifier un fichier du noyau protégé (ci-dessous). Si un changement te semble nécessaire, écris une proposition dans `proposals/` et explique-la à Etienne.
 4. Ne jamais afficher, journaliser ou committer un secret. Les secrets vivent uniquement dans l'environnement GitHub `production`.
