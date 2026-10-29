@@ -1,0 +1,31 @@
+# Test « pays » pour le passage au réel (workflow libre, lecture seule, aucun mot de passe).
+# Demande au contrôle officiel de Polymarket (https://polymarket.com/api/geoblock) si la
+# machine qui fait tourner les cycles aurait le droit d'y passer des ordres. Ne passe aucun
+# ordre et ne touche à aucun compte. Voir proposals/2026-10-29_passage_au_reel.md (étape 1).
+name: labo-geoblock
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pays:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Polymarket accepte-t-il des ordres venant de cette machine ?
+        run: |
+          set -euo pipefail
+          curl -sS --max-time 20 https://polymarket.com/api/geoblock > geoblock.json
+          python3 - <<'PY'
+          import json
+          r = json.load(open("geoblock.json"))
+          pays, region, bloque = r.get("country"), r.get("region"), r.get("blocked")
+          print(f"Pays vu par Polymarket : {pays} (région {region})")
+          if bloque:
+              print(f"::error::Ordres REFUSÉS depuis cette machine ({pays}) : les cycles ne peuvent pas passer d'ordres réels d'ici.")
+              raise SystemExit(1)
+          print(f"Ordres acceptés depuis cette machine ({pays}).")
+          PY
