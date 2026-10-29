@@ -73,7 +73,7 @@ Détail : `docs/EXPLOITATION.md`. Résumé :
 6. **Settings → Pages** : branche `gh-pages`, dossier `/` → tableau de bord à
    `https://r655rkz7bt-stack.github.io/polymarket-labo-favori-sport/`.
 7. Ruleset `protection-data` (pas de suppression ni de force push sur `data`), puis `protection-main` (`docs/VERROUILLAGE.md`).
-8. cron-job.org : nouveau jeton GitHub (fine-grained, ce seul dépôt, permission Actions) et tâche toutes les 5 minutes sur
+8. cron-job.org : nouveau jeton GitHub (fine-grained, ce seul dépôt, permission Actions) et tâche toutes les 2 minutes (choix d'Etienne, = `cycle.bucket_minutes`) sur
    `…/repos/r655rkz7bt-stack/polymarket-labo-favori-sport/actions/workflows/cycle.yml/dispatches` ; le jeton ne passe jamais
    par la conversation.
 9. Facultatif : installer l'application GitHub de Claude sur ce dépôt pour qu'une session puisse y travailler.

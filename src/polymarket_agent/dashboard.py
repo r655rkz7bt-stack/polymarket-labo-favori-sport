@@ -643,7 +643,7 @@ def is_due(out_dir: Path, now: datetime, every_minutes: float) -> bool:
         generated = datetime.fromisoformat(json.loads(data_file.read_text(encoding="utf-8"))["genere_le"])
     except (ValueError, KeyError, TypeError):
         return True
-    return (now - generated).total_seconds() >= every_minutes * 60 - 30  # marge : cycles toutes les 5 min
+    return (now - generated).total_seconds() >= every_minutes * 60 - 30  # marge : un cycle toutes les quelques minutes
 
 
 def build(settings: dict, root: Path, key: bytes, db, now: datetime | None = None) -> Path:

@@ -12,7 +12,7 @@ Formule officielle (docs.polymarket.com/programs/liquidity-rewards.md, lue le 16
 Vérifié le 16/10/2026 : le carnet du NON est le MIROIR de celui du OUI (vente du OUI à p = achat
 du NON à 1 − p, mêmes ordres) : les concurrents ne sont comptés qu'une fois, sur le carnet du OUI.
 
-LIMITES (affichées avec le résultat) : une photo toutes les 5 minutes au lieu de chaque minute ;
+LIMITES (affichées avec le résultat) : une photo par cycle (toutes les 2 minutes, `cycle.bucket_minutes`) au lieu de chaque minute ;
 milieu simple au lieu du « milieu ajusté » officiel ; multiplicateur « en match » ignoré. C'est une
 ESTIMATION : seul le journal signé fait foi.
 

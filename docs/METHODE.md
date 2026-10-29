@@ -31,7 +31,7 @@ Fichier libre : Claude peut l'améliorer. Les règles permanentes sont dans `CLA
 - Aperçu avant publication (vraies données publiées + gabarit du dépôt, photos téléphone et ordinateur) :
   `bash scripts/fetch_published.sh` puis `.venv/bin/python scripts/apercu_dashboard.py` (sortie `apercu/`)
 - Rapports publiés par le cycle de production : `bash scripts/fetch_published.sh` (dossier `published/`)
-- Production : workflows `cycle` (toutes les 5 min), `initialize` (une fois), exploitation dans `docs/EXPLOITATION.md`
+- Production : workflows `cycle` (toutes les 2 min, = `cycle.bucket_minutes`), `initialize` (une fois), exploitation dans `docs/EXPLOITATION.md`
 - Réinitialisation (Etienne seul, via le workflow `reset-capital`) : `scripts/reset_capital.py`
 - Contrôle des fichiers protégés : `scripts/guard_check.py PROTECTED_PATHS.txt < liste_des_fichiers`
 - `--dev-key` : clé locale de test (`state/dev_ledger_key`, ignorée par Git). En production, `LEDGER_KEY` vient de l'environnement GitHub `production`.

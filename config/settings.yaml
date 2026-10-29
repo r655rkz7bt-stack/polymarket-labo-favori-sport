@@ -12,7 +12,10 @@ paths:
   cycle_lock: state/cycle.lock
 
 cycle:
-  bucket_minutes: 5            # sert à fabriquer des identifiants d'opération idempotents
+  # 29/10/2026 : 2 = intervalle réel entre deux cycles (cron-job.org réglé toutes les 2 min par Etienne). Sert aux identifiants
+  # d'opération idempotents ET à la durée créditée par cycle aux récompenses estimées (liquidité, détention) : à garder égal
+  # à l'intervalle de cron-job.org, sinon ces estimations sont fausses (à 5 pour des cycles de 2 min : comptées 2,5 fois).
+  bucket_minutes: 2
   battement_fantomes_minutes: 30   # 21/10/2026 : battement d'un fantôme inactif au plus toutes les 30 min (journaux 6× plus légers)
   reglements_par_lot: 100      # 21/10/2026 : marchés détenus lus par lots de 100 pour les règlements (723 requêtes → ~16)
 

@@ -134,7 +134,7 @@ def build(data: dict, entries: dict[str, list[dict]], questions: dict[str, str],
     total_cycles = sum(cycles.values())
     errors = sum(v for k, v in cycles.items() if k not in ("OK", "DEGRADE"))
     degraded = cycles.get("DEGRADE", 0)
-    say("machine", f"{_plural(total_cycles, 'cycle', 'cycles')} en 24 h (un toutes les 5 min)"
+    say("machine", f"{_plural(total_cycles, 'cycle', 'cycles')} en 24 h (un toutes les 2 min)"
                    + (f", dont {errors} en erreur" if errors else ", aucun en erreur")
                    + (f" et {degraded} sans trading faute de données" if degraded else "") + ".")
     audit = data.get("audit")

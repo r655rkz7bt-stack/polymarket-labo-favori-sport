@@ -12,7 +12,7 @@ plusieurs dizaines de stratégies de favoris, une part de son avance peut venir 
 et à tester des variantes.
 
 ## Ce qui tourne
-- **Cycle** toutes les 5 minutes (GitHub Actions, lancé par cron-job.org) : lecture des marchés et des carnets publics de
+- **Cycle** toutes les 2 minutes (GitHub Actions, lancé par cron-job.org) : lecture des marchés et des carnets publics de
   Polymarket, propositions de la stratégie, contrôleur de sécurité, simulation d'exécution sur les vrais carnets (frais
   compris), journal signé.
 - **Arène** : chaque stratégie (l'originale et ses variantes) a son portefeuille fantôme ; classement, confiance (score t,
