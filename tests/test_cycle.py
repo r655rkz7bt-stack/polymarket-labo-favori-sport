@@ -112,11 +112,18 @@ def test_rerun_in_same_bucket_does_not_double_book(env, paths):
     assert Ledger.open(paths[0], KEY, paths[1]).state.cash == cash
 
 
+def _full_kelly():
+    """Réglages du dépôt, mise entière (prudence 1) : comme une stratégie déjà prouvée."""
+    settings = load_settings()
+    settings["sante_strategies"] = dict(settings["sante_strategies"], base=1.0)
+    return settings
+
+
 def test_each_bet_is_capped_at_a_quarter_of_the_capital(env, paths):
     """`principal.max_mise` (0,25) : Kelly entier sur un biais fixe de +0,05 voudrait bien plus."""
     make, _, _ = env
     deep = make_book("tokA", bids=(("0.89", "5000"),), asks=(("0.90", "100000"),))
-    run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": deep})))
+    run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": deep}), _full_kelly()))
     pos = Ledger.open(paths[0], KEY, paths[1]).state.positions["tokA"]
     assert D("240") <= pos.cost_basis <= D("251")
 
@@ -261,13 +268,19 @@ def test_milestone_is_recorded_in_the_cycle(env, paths):
     assert state.next_target == D("2250")
 
 
-def test_repository_config_is_the_single_strategy_at_half_kelly():
+def test_repository_config_is_the_single_strategy_with_its_ghost_conditions():
+    """29/10/2026 (Etienne) : « les mêmes conditions que sur l'ancien fantôme » : Kelly entier × santé (½ tant que rien
+    n'est prouvé, renfort jusqu'à 2), mise ≤ 25 % du capital, pas de réserve, ordres posés gardés en match, antécédents."""
     loaded = load_strategies(ROOT / "config" / "strategies.yaml")
     assert [s.strategy_id for s in loaded] == ["nf_sport_patiente_prix_850_875"]  # laboratoire dédié
-    assert loaded[0].params["kelly_fraction"] == D("0.5")
+    assert loaded[0].params["kelly_fraction"] == D("1.0")
     assert loaded[0].annuler_au_coup_d_envoi is False  # comme dans l'ancien labo (ses 85 positions mesurées)
     settings = load_settings()
-    assert settings["principal"]["max_mise"] == 0.25 and settings["principal"]["reserve_liquidites"] == 0.03
+    assert settings["principal"] == {"max_mise": 0.25}
+    assert settings["sante_strategies"] == {"min_resolved": 20, "base": 0.5, "proven": 1.0, "disproven": 0.25,
+                                            "suspension_min_closed": 20,
+                                            "renfort": {"min_operations": 30, "confiance_jour_min": 0.8, "paris_fictifs": 30, "max": 2.0}}
+    assert (ROOT / settings["paths"]["antecedents"]).exists()
 
 
 def test_crash_mid_cycle_then_clean_resume(env, paths):
@@ -346,7 +359,7 @@ def test_resting_buys_cannot_reserve_more_than_the_cash(env, paths):
     make, db, _ = env
     markets = [raw_market(str(i), yes_token=f"y{i}", no_token=f"n{i}", event_id=f"e{i}") for i in range(6)]
     books = {f"y{i}": good_book(f"y{i}") for i in range(6)}
-    run_cycle(make(FakeGamma(markets), FakeClob(books), strategies=[_patient("6")]))
+    run_cycle(make(FakeGamma(markets), FakeClob(books), _full_kelly(), strategies=[_patient("6")]))
     reserved = sum(D(o["remaining"]) * D(json.loads(o["proposal"])["max_price"]) for o in db.open_orders("principal"))
     assert 0 < reserved <= D("1000")
     reasons = [r[0] for r in db.conn.execute("SELECT reasons FROM decisions WHERE accepted = 0")]

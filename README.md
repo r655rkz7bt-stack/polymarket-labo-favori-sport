@@ -14,10 +14,12 @@ de plusieurs dizaines de stratégies de favoris, une part de son avance peut ven
 - **Cycle** toutes les 2 minutes (GitHub Actions, lancé par cron-job.org) : lecture des marchés et des carnets publics de
   Polymarket, propositions de la stratégie, contrôleur de sécurité, simulation d'exécution sur les vrais carnets (frais
   compris), journal signé.
-- **Un seul portefeuille** (depuis le 29/10/2026, plus d'arène) : la stratégie trade directement le capital principal, à
-  demi-Kelly, une mise au plus 25 % du capital, 3 % toujours gardés disponibles (`config/settings.yaml` → `principal`).
-- **Indices de confiance** de la stratégie, calculés sur ses paris terminés (`confiance.py`) : score t, pourcentage, confiance
-  par jour, gagnés contre attendus, verdict.
+- **Un seul portefeuille** (depuis le 29/10/2026, plus d'arène) : la stratégie trade directement le capital principal,
+  **aux conditions de son ancien fantôme** (Kelly × prudence × renfort, `sante.py` ; une mise au plus 25 % du capital) et
+  en **reprenant la suite de son passé** : son journal du labo d'origine (`archives/labo_origine/`) est relu à chaque
+  cycle (`antecedents.py`).
+- **Indices de confiance** de la stratégie, calculés sur ses paris terminés, passé compris (`confiance.py`) : score t,
+  pourcentage, confiance par jour, gagnés contre attendus, verdict.
 - **Règle n°1** : à 0 € disponible, le trading s'arrête définitivement (code protégé `ledger.py`, `safety_controller.py`).
 - **Tableau de bord** sur GitHub Pages : capital, la stratégie et sa confiance (avec ses courbes), positions, ordres posés, journal.
 

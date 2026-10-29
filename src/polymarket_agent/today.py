@@ -82,11 +82,18 @@ def build(data: dict, entries: list[dict], questions: dict[str, str], now: datet
     conf = (data.get("strategie") or {}).get("confiance") or {}
     if conf.get("operations"):
         expected = f"{conf['attendues']:.1f}".replace(".", ",")
-        say("strategie", f"Depuis le départ : {_plural(conf['operations'], 'pari terminé', 'paris terminés')}, "
+        past = f" (dont {conf['anterieures']} dans son ancien fantôme)" if conf.get("anterieures") else ""
+        say("strategie", f"Depuis le départ : {_plural(conf['operations'], 'pari terminé', 'paris terminés')}{past}, "
                          f"{conf['gagnees']} gagnés pour {expected} attendus d'après les prix payés.")
         say("strategie", f"Confiance {conf['confiance_pct']} % (par jour {conf['confiance_jour_pct']} %) : {conf['verdict']}.")
     else:
         say("strategie", "Aucun pari terminé depuis le départ : pas encore de mesure de confiance.")
+    health = (data.get("strategie") or {}).get("sante") or {}
+    if health.get("suspendue"):
+        say("strategie", f"Suspendue : {health['suspendue']}.")
+    elif health.get("facteur") is not None:
+        say("strategie", f"Mise : {str(health['facteur']).replace('.', ',')} × Kelly (prudence {str(health['prudence']).replace('.', ',')}, "
+                         f"renfort {str(health['renfort']).replace('.', ',')}), comme son ancien fantôme.")
 
     # 4. La machine.
     health = data.get("sante", {})

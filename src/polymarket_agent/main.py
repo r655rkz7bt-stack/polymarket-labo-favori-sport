@@ -6,6 +6,7 @@ relecture du carnet → simulation → journal → battement de cœur.
 Laboratoire dédié (décision d'Etienne, 29/10/2026) : plus d'arène ni de portefeuilles fantômes. La
 stratégie de config/strategies.yaml trade directement le capital PRINCIPAL, celui de la règle
 « à 0 € tu meurs » ; chaque palier franchi (cliquet ×1,5) est inscrit dans le journal signé.
+Elle mise aux règles de son ancien fantôme (sante.py), en reprenant la suite de son passé (antecedents.py).
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ from decimal import Decimal, ROUND_DOWN, ROUND_UP
 from pathlib import Path
 from typing import Callable
 
+from polymarket_agent import antecedents, sante
 from polymarket_agent.correlation import correlation_group
 from polymarket_agent.execution_simulator import simulate_buy, simulate_resting_buy
 from polymarket_agent.http_client import SourceUnavailable
@@ -27,6 +29,7 @@ from polymarket_agent.ledger import Ledger, LedgerCorrupt, LedgerError, NotIniti
 from polymarket_agent.market_scanner import scan
 from polymarket_agent.models import MarketInfo, OrderBook
 from polymarket_agent.persistence import Database
+from polymarket_agent.reporting import read_entries
 from polymarket_agent.safety_controller import (MarketContext, Proposal, RiskLimits,
                                                 assert_simulation_mode, evaluate)
 from polymarket_agent.settlement import settle_positions
@@ -54,6 +57,8 @@ class CycleDeps:
     gamma: GammaClient
     clob: ClobClient
     now: Callable[[], datetime] = lambda: datetime.now(timezone.utc)
+    # Antécédents : journal du fantôme de la stratégie dans le labo d'origine (antecedents.load), [] sans eux.
+    history: list = field(default_factory=list)
 
 
 @dataclass
@@ -248,8 +253,14 @@ def _trade(deps: CycleDeps, main: Portfolio, report: CycleReport, bucket: str) -
         report.status = "FAILLITE"
         return
 
-    # 6-11. Stratégie → propositions → contrôleur → exécution simulée.
-    _execute(deps, main, result.watchlist, books, report, bucket, result.markets)
+    # 6. Santé : taille des mises aux règles de l'ancien fantôme, sur ses antécédents puis sur le journal d'ici.
+    live = read_entries(ledger)
+    health = sante.assess(deps.history, live, antecedents.trades(deps.history, live), deps.settings)
+    sante.save(deps.db, health)
+    report.counts["facteur_mise"] = health["facteur"]
+
+    # 7-11. Stratégie → propositions → contrôleur → exécution simulée.
+    _execute(deps, main, result.watchlist, books, report, bucket, result.markets, health)
     _lap(report, "strategie")
     report.status = "FAILLITE" if ledger.state.bankrupt else "OK"
 
@@ -278,7 +289,7 @@ def _raison_par_defaut(output, vus: int) -> None:
 
 def _execute(deps: CycleDeps, portfolio: Portfolio, watchlist: list[MarketInfo],
              books: dict[str, OrderBook], report: CycleReport, bucket: str,
-             all_markets: list[MarketInfo] | None = None) -> None:
+             all_markets: list[MarketInfo] | None = None, health: dict | None = None) -> None:
     ledger, marks = portfolio.ledger, portfolio.marks
     by_market = {m.market_id: m for m in (all_markets or [])} | {m.market_id: m for m in watchlist}
     fresh_books: dict = {}  # carnets relus pendant ce cycle (_reread_book)
@@ -304,6 +315,14 @@ def _execute(deps: CycleDeps, portfolio: Portfolio, watchlist: list[MarketInfo],
         reasons = dict(sorted(output.abstentions.items(), key=lambda kv: -kv[1])[:6])
         report.abstentions[strategy.strategy_id] = {
             "marches": len(seen), "propositions": len(output.proposals), "ordres": len(limit_orders), "raisons": reasons}
+        # Mise de l'ancien fantôme (sante.py) : Kelly × prudence × renfort, ou rien si la stratégie est suspendue.
+        if health is not None:
+            factor = Decimal(str(health["facteur"]))
+            n_before = len(output.proposals) + len(limit_orders)
+            output.proposals = _scale(output.proposals, factor)
+            limit_orders = _scale(limit_orders, factor)
+            if n_before - len(output.proposals) - len(limit_orders):
+                reasons[health["suspendue"] or "mise réduite à 0 part"] = n_before - len(output.proposals) - len(limit_orders)
         # Deux camps d'un même match (enquêtes des 20 et 22/10/2026).
         before = len(output.proposals) + len(limit_orders)
         output.proposals = _opposite_side(deps, portfolio, output.proposals, held_now)
@@ -508,6 +527,19 @@ def _opposite_side(deps: CycleDeps, portfolio: Portfolio, proposals: list[Propos
                 continue
             held.setdefault(p.market_id, set()).add(p.token_id)
             held_now.setdefault(p.market_id, set()).add(p.token_id)
+        out.append(p)
+    return out
+
+
+def _scale(proposals: list[Proposal], factor: Decimal) -> list[Proposal]:
+    """Achats multipliés par `factor` (parts arrondies au centième inférieur) ; un achat réduit à 0 part disparaît."""
+    out = []
+    for p in proposals:
+        if p.side == "BUY":
+            shares = (p.shares * factor).quantize(Decimal("0.01"), rounding=ROUND_DOWN)
+            if shares <= 0:
+                continue
+            p = dataclasses.replace(p, shares=shares)
         out.append(p)
     return out
 

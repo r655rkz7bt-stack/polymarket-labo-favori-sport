@@ -22,10 +22,13 @@ replier: [ordres-poses, journal, decisions-recentes, systeme]
 a_la_une:
   date: "2026-10-29"
   points:
-    - "Plus d'arène : nf_sport_patiente_prix_850_875 (favori de sport, prix du vendeur 0,85-0,875, ordre posé) trade directement le capital principal, à demi-Kelly, une mise au plus 25 % du capital. Départ : 1 000 € fictifs."
+    - "Plus d'arène : nf_sport_patiente_prix_850_875 (favori de sport, prix du vendeur 0,85-0,875, ordre posé) trade directement le capital principal, aux conditions de son ancien fantôme, et reprend la suite de son passé (85 paris du 20 au 28/10, 1 472,59 € à la fin)."
 
 # Courbes de la stratégie : le bouton « Voir ses courbes » charge le journal PUBLIC du capital principal
 # (fichier ledger.jsonl de la branche « data ») depuis cette adresse et calcule les courbes dans le navigateur.
 # Seule une adresse raw.githubusercontent.com finissant par « / » est acceptée (sinon la page la déduit de
 # son adresse GitHub Pages).
 journaux_url: "https://raw.githubusercontent.com/r655rkz7bt-stack/polymarket-labo-favori-sport/data/ledger/"
+# Antécédents (29/10/2026) : journal du fantôme de la stratégie dans le labo d'origine (branche main, compressé). Une fois
+# le capital repris à sa valeur, ses paris et sa courbe précèdent ceux d'ici dans les courbes de la stratégie.
+antecedents_url: "https://raw.githubusercontent.com/r655rkz7bt-stack/polymarket-labo-favori-sport/main/archives/labo_origine/nf_sport_patiente_prix_850_875_v1.0.0.jsonl.gz"

@@ -13,10 +13,13 @@ portefeuilles fantômes, la santé des stratégies et les récompenses estimées
 3. Scanner (`market_scanner.py`, Gamma) : 1 500 marchés, les 150 plus échangés surveillés ; carnets (CLOB).
 4. Ordres posés des cycles précédents : servis si un vendeur traverse leur prix, annulés à l'expiration, à la fermeture du
    marché ou, si la stratégie le demande, au coup d'envoi (`execution_simulator.simulate_resting_buy`).
-5. Stratégie (`strategy_engine.py` : `NaiveFavorite`, enveloppée par `Filtered` puis `PatientOrders`) : achats immédiats et
-   ordres à poser ; deux camps d'un même match refusés, mise plafonnée (`principal.max_mise`).
+5. Santé (`sante.py`) : facteur de mise aux règles de l'ancien fantôme (prudence × renfort, ou 0 si suspendue), calculé
+   sur ses antécédents (`antecedents.py`, journal du labo d'origine relu et sa chaîne de hash vérifiée) puis sur le
+   journal d'ici. Stratégie (`strategy_engine.py` : `NaiveFavorite`, enveloppée par `Filtered` puis `PatientOrders`) :
+   achats immédiats et ordres à poser, mises × ce facteur ; deux camps d'un même match refusés, mise plafonnée
+   (`principal.max_mise`).
 6. Contrôleur de sécurité (`safety_controller.py`), relecture du carnet (`relecture.chute_max`), réserve de liquidités
-   (`principal.reserve_liquidites`), simulation sur les vrais carnets, écriture au journal, battement de cœur.
+   si `principal.reserve_liquidites` est réglée (pas pour l'instant : le fantôme n'en avait pas), simulation sur les vrais carnets, écriture au journal, battement de cœur.
 7. Tableau de bord (`dashboard.py`, `dashboard_template.html`, `today.py`) toutes les 10 minutes.
 
 ## Données
@@ -24,7 +27,7 @@ Journal signé : branche `data` (`ledger/ledger.jsonl`) ; base d'analyse : cache
 `data` ; tableau de bord : branche `gh-pages`. Détails d'exploitation : `docs/EXPLOITATION.md`.
 
 ## Confiance (`confiance.py`)
-Sur les opérations clôturées du capital principal : score t des rendements par pari (résultat ÷ mise), confiance en %
+Sur les opérations clôturées des antécédents puis du capital principal : score t des rendements par pari (résultat ÷ mise), confiance en %
 (`confidence_percent`), confiance par jour (gagnés contre attendus, journée par journée), verdict (« prometteuse »,
 « indéterminée », « ne fonctionne pas ») d'après l'intervalle à 90 % du rendement moyen, par bootstrap sur les matchs ;
 « données insuffisantes » sous 20 opérations. Les courbes du tableau de bord (bouton « Voir ses courbes ») refont ces calculs

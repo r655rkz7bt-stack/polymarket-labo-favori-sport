@@ -9,6 +9,9 @@ paths:
   database: state/market.sqlite
   logs: logs
   cycle_lock: state/cycle.lock
+  # Antécédents (29/10/2026) : journal du fantôme de la stratégie dans le labo d'origine, du 20/10 au 28/10/2026 23 h 42.
+  # Relu à chaque cycle (antecedents.py) : la stratégie reprend la suite de son passé (confiance, mise, renfort).
+  antecedents: archives/labo_origine/nf_sport_patiente_prix_850_875_v1.0.0.jsonl.gz
 
 cycle:
   # 29/10/2026 : 2 = intervalle entre deux cycles (cron-job.org réglé toutes les 2 min par Etienne). Sert aux identifiants
@@ -18,15 +21,25 @@ cycle:
   reglements_par_lot: 100      # 21/10/2026 : marchés détenus lus par lots de 100 pour les règlements (723 requêtes → ~16)
 
 
-# Capital principal (29/10/2026 : la stratégie le trade directement, sans arène), libre :
+# Capital principal (29/10/2026 : la stratégie le trade directement, sans arène, AUX CONDITIONS DE SON ANCIEN FANTÔME,
+# décision d'Etienne), libre :
 principal:
-  # Une mise ≤ 25 % du capital estimé (23/10/2026, plafond de l'ancien fantôme de la stratégie) : Kelly sur un biais
-  # fixe de +0,05 misait jusqu'à la moitié du capital sur un seul pari.
+  # Une mise ≤ 25 % du capital estimé (23/10/2026, `fantomes.max_mise` de l'ancien labo) : Kelly sur un biais fixe de
+  # +0,05 misait jusqu'à la moitié du capital sur un seul pari.
   max_mise: 0.25
-  # Réserve de liquidités (27/10/2026) : un achat ne laisse jamais moins de 3 % du capital estimé en argent disponible.
-  # La faillite tombe à 0 € DISPONIBLE, même avec des positions qui valent quelque chose : ce coussin empêche qu'une
-  # mise la provoque par accident.
-  reserve_liquidites: 0.03
+  # Pas de réserve de liquidités : le fantôme n'en avait pas (celle du capital principal de l'ancien labo,
+  # `reserve_liquidites: 0.03`, gardait 3 % disponibles). La règle n°1 reste appliquée par ledger.py.
+
+# Santé de la stratégie (sante.py, mêmes réglages que dans l'ancien labo) : mise prudente tant que ses prévisions ne sont
+# pas prouvées meilleures que le marché, renfort si elle prouve plus d'avantage qu'elle n'en suppose, suspension si les
+# frais mangent tout son avantage. Calculée sur ses antécédents (paths.antecedents) puis sur le journal d'ici.
+sante_strategies:
+  min_resolved: 20          # prévisions jugées (paris réglés) avant de conclure
+  base: 0.5                 # part de la mise habituelle tant que rien n'est prouvé (½ Kelly)
+  proven: 1.0               # prouvée meilleure que le prix du marché
+  disproven: 0.25           # prouvée moins bonne
+  suspension_min_closed: 20 # paris terminés avant de pouvoir suspendre
+  renfort: {min_operations: 30, confiance_jour_min: 0.8, paris_fictifs: 30, max: 2.0}
 
 # Deux camps d'un même match (23/10/2026, contrôle `deux_camps`) : pas d'achat au-dessus de `prix_min`
 # d'un jeton d'un marché où le portefeuille tient déjà un autre jeton payé au-dessus de ce prix.

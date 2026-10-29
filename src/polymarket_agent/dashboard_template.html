@@ -1154,10 +1154,12 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
     var names = STRATS.map(function (s) { return s.nom; });
     document.getElementById("st-kicker").textContent = names.length ? names.join(" · ") : "aucune stratégie active";
     document.getElementById("st-explain").textContent = STRATS.map(function (s) { return s.explication; }).filter(Boolean).join(" ");
-    document.getElementById("st-verdict").textContent = CONF.operations
+    document.getElementById("st-verdict").textContent = (CONF.operations
       ? "Verdict : " + CONF.verdict + ". Confiance = chance, d'après les paris déjà terminés, que la stratégie gagne vraiment " +
         "plus que ses prix ne l'annoncent. Elle a été choisie parmi des dizaines de cousines : même à 90 %, une part peut venir de la chance."
-      : "Aucun pari terminé pour l'instant : la confiance se mesurera sur les premiers paris réglés.";
+      : "Aucun pari terminé pour l'instant : la confiance se mesurera sur les premiers paris réglés.") +
+      (CONF.anterieures ? " Ses " + CONF.anterieures + " paris terminés dans son ancien fantôme (jusqu'au " + short(CONF.antecedents_fin) +
+        " UTC) comptent dans ces chiffres et dans sa mise : elle reprend la suite de son passé." : "");
     var stats = document.getElementById("st-stats");
     function tile(k, v, sub, mainT) { var tt = el("div", "stat" + (mainT ? " main" : "")); tt.appendChild(el("div", "k", k));
       var vv = el("div", "v"); if (v instanceof Node) vv.appendChild(v); else vv.textContent = v; tt.appendChild(vv);
@@ -1165,7 +1167,8 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
       tt.appendChild(sb); stats.appendChild(tt); }
     tile("Confiance", CONF.operations ? fmt(CONF.confiance_pct, 0) + " %" : "—",
       [CONF.operations ? "score t " + fmt(CONF.score_t, 2) + " · par jour " + fmt(CONF.confiance_jour_pct, 0) + " %" : "pas encore de pari terminé"], true);
-    tile("Paris terminés", fmt(CONF.operations || 0, 0), [fmt(CONF.evenements || 0, 0) + " matchs ou événements"]);
+    tile("Paris terminés", fmt(CONF.operations || 0, 0), [fmt(CONF.evenements || 0, 0) + " matchs ou événements" +
+      (CONF.anterieures ? " · dont " + CONF.anterieures + " dans l'ancien fantôme" : "")]);
     tile("Gagnés / attendus", CONF.operations ? CONF.gagnees + " / " + fmt(CONF.attendues, 1) : "—",
       CONF.operations ? [delta(CONF.en_plus, 1, ""), " d'après les prix payés"] : []);
     tile("Résultat", CONF.operations ? delta(CONF.resultat, 2) : "—", [CONF.operations ? "sur " + fmt(CONF.mise_totale, 2) + " misés" : ""]);
@@ -1173,6 +1176,10 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
       : delta(CONF.rendement_par_euro * 100, 1, " %"), ["résultat ÷ mises"]);
     tile("Intervalle à 90 %", CONF.ic90 ? fmt(CONF.ic90[0] * 100, 1) + " à " + fmt(CONF.ic90[1] * 100, 1) + " %" : "—",
       ["rendement moyen par pari, par match"]);
+    var SA = ST.sante || null;  // mise aux règles de l'ancien fantôme (sante.py), calculée à chaque cycle
+    tile("Mise", SA ? (SA.suspendue ? "suspendue" : fmt(SA.facteur, 2) + " × Kelly") : "—",
+      SA ? [SA.suspendue ? SA.suspendue : "prudence " + fmt(SA.prudence, 2) + " · renfort " + fmt(SA.renfort, 2) + " · " +
+        SA.jugees + " prévisions jugées"] : ["calculée au prochain cycle"]);
     var rg = document.getElementById("st-reglages");
     STRATS.forEach(function (s) { (s.reglages || []).forEach(function (r) { rg.appendChild(el("span", "pill", r)); }); });
     // Abstentions du dernier cycle : marchés vus, propositions, raisons les plus fréquentes.
@@ -1330,13 +1337,26 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
     for (var i = 0; i < max; i++) out.push(pts[Math.floor(i * step)]);
     out.push(pts[pts.length - 1]); return out; }
 
+  // Antécédents (29/10/2026) : une fois le capital repris à la valeur de l'ancien fantôme, son journal (compressé) précède
+  // celui d'ici : mêmes paris terminés que confiance.py, courbe continue depuis son départ. Sans décompression possible
+  // dans le navigateur, seul le journal d'ici est montré.
+  function pastText() {
+    if (!FICHE.antecedents || !CONF.reprise || typeof DecompressionStream === "undefined") return Promise.resolve(null);
+    return fetch(FICHE.antecedents, { cache: "force-cache" }).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status);
+      return new Response(r.body.pipeThrough(new DecompressionStream("gzip"))).text(); }).catch(function () { return null; });
+  }
+  function chain(P, J) {  // antécédents puis journal d'ici ; les positions encore ouvertes des antécédents ne comptent pas
+    return P ? { cap0: P.cap0, start: P.start, beats: P.beats.concat(J.beats), trades: P.trades.concat(J.trades), open: J.open,
+      past: P.trades.length } : J;
+  }
   function openFiche(holder, s) {
     var url = journalUrl();
     holder.appendChild(el("p", "note", "Chargement du journal du capital principal…"));
     if (!url) { holder.textContent = ""; holder.appendChild(el("p", "empty", "Adresse du journal inconnue (config/dashboard.yaml → journaux_url).")); return; }
     var t0 = Date.now();
-    fetch(url, { cache: "no-cache" }).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
-      .then(function (text) { var J = readJournal(text); holder.textContent = ""; drawFiche(holder, s, J, Date.now() - t0); })
+    Promise.all([fetch(url, { cache: "no-cache" }).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); }), pastText()])
+      .then(function (texts) { var J = chain(texts[1] ? readJournal(texts[1]) : null, readJournal(texts[0]));
+        holder.textContent = ""; drawFiche(holder, s, J, Date.now() - t0); })
       .catch(function (err) { holder.textContent = "";
         holder.appendChild(el("p", "empty", "Journal indisponible pour l'instant (" + err.message + "). Réessayez dans quelques minutes."));
         holder._done = false; });
@@ -1497,7 +1517,8 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
         var c2 = el("td", "n"); c2.appendChild(delta(t.pnl, 2)); r2.appendChild(c2); b2.appendChild(r2); });
       var sc2 = el("div", "scroll"); sc2.appendChild(t2); det.appendChild(sc2); holder.appendChild(det);
     }
-    holder.appendChild(el("p", "note", "Calculé à l'instant dans votre navigateur, à partir du journal public du capital principal (" +
+    holder.appendChild(el("p", "note", "Calculé à l'instant dans votre navigateur, à partir du journal public du capital principal" +
+      (J.past ? ", précédé de celui de l'ancien fantôme (" + J.past + " paris terminés)" : "") + " (" +
       J.beats.length + " battements, " + trades.length + " paris terminés, " + fmt(ms / 1000, 1) + " s)."));
   }
 

@@ -3,8 +3,9 @@
 # (au 28/10/2026 23 h 48 UTC : 1 484 € fictifs en 8,3 jours, 85 opérations, confiance 90 %, verdict « indéterminée » ;
 # la veille 1 566 €, 74 opérations, 98 %, « prometteuse »). Contexte complet : docs/CONTEXTE.md.
 #
-# 29/10/2026 (décision d'Etienne) : plus d'arène ni de fantômes. La stratégie trade DIRECTEMENT le capital principal
-# (journal signé, règle « à 0 € tu meurs »). Plafonds du principal : config/settings.yaml → principal.
+# 29/10/2026 (décisions d'Etienne) : plus d'arène ni de fantômes. La stratégie trade DIRECTEMENT le capital principal
+# (journal signé, règle « à 0 € tu meurs »), aux conditions de son ancien fantôme, en reprenant la suite de son passé
+# (config/settings.yaml → principal, sante_strategies, paths.antecedents).
 # Pour essayer un autre réglage : changer les valeurs ci-dessous (bornes min/max vérifiées au chargement) et noter
 # la date du changement dans docs/CONTEXTE.md, pour savoir à partir de quand les résultats le reflètent.
 
@@ -32,6 +33,6 @@ nf_sport_patiente_prix_850_875:
     min_net_edge:   {value: 0.01, min: 0.00, max: 0.50}
     max_extra_ticks: {value: 2, min: 0, max: 5}
     max_proposals_per_cycle: {value: 3, min: 0, max: 50}
-    # Demi-Kelly (29/10/2026) : la mise de base de son ancien fantôme, où la « santé des stratégies » la réduisait de moitié
-    # tant que son avantage n'était pas prouvé (son premier achat : 64 € sur 1 000, environ la moitié du Kelly entier).
-    kelly_fraction:  {value: 0.5, min: 0.0, max: 5.0}
+    # Kelly entier, comme dans l'ancien labo : la santé de la stratégie (config/settings.yaml → sante_strategies) le multiplie
+    # ensuite par sa prudence (½ tant que rien n'est prouvé, 1 prouvée, ¼ démentie) et son renfort, comme pour son fantôme.
+    kelly_fraction:  {value: 1.0, min: 0.0, max: 5.0}

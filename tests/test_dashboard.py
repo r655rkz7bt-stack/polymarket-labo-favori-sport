@@ -55,7 +55,7 @@ def test_collect_reads_the_ledger_and_db(tmp_path):
 def test_strategy_settings_and_situation_are_written_for_etienne(tmp_path):
     info = dashboard.strategy_info(ROOT)["nf_sport_patiente_prix_850_875"]
     assert "prix du vendeur entre 0,850 et 0,875" in info["reglages"]
-    assert "mise : 0,50 × Kelly" in info["reglages"] and "ordres posés gardés pendant le match" in info["reglages"]
+    assert "mise : 1,00 × Kelly" in info["reglages"] and "ordres posés gardés pendant le match" in info["reglages"]
     s = dashboard.situation({}, [info], {"operations": 0})
     assert s["phrase"] == "Le capital principal est tradé par nf_sport_patiente_prix_850_875."
     assert "Aucun pari terminé" in s["detail"]

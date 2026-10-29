@@ -20,7 +20,7 @@
 - **mode patient** (`limit_ticks: 1`) : ordre posé 1 cran au-dessus du meilleur acheteur, servi seulement si un vendeur
   traverse ce prix (`execution_simulator.simulate_resting_buy`) ; souvent sans frais (maker) ;
 - **filtre de prix** : il porte sur le prix du vendeur (ask), entre 0,85 et 0,875 ; l'ordre posé peut donc être un peu plus
-  bas (premier achat : 0,84) ; mise de Kelly sur l'avantage supposé (demi-Kelly ici depuis le 29/10, la mise de base de son ancien fantôme).
+  bas (premier achat : 0,84) ; mise de Kelly sur l'avantage supposé (ici comme dans son ancien fantôme : Kelly × prudence × renfort, `sante.py`).
 Historique : favori naïf → « sport » → « patient » (17/10) → morceau de prix 0,850-0,875 trouvé par l'entonnoir 80/20 (20/10).
 
 ### Chiffres dans le labo d'origine (fantôme, vrais carnets, frais compris)
@@ -43,8 +43,8 @@ gagnées pour 72,5 attendues par leurs prix (z +1,08)**, +484 € sur 11 132 €
   favori (sélection adverse). Le réglage `annuler_au_coup_d_envoi: true` (config/strategies.yaml) fait jouer la stratégie
   avant le match seulement (ordres annulés au coup d'envoi, aucun nouveau pari pendant le jeu). Il est à `false` : comme
   dans l'ancien labo, où elle gagnait aussi pendant le match (+2,3 %), moins qu'avant (+10,2 %).
-- Mises en Kelly sur un biais supposé de 0,05 : grosses mises à prix élevé. Depuis le 29/10 : demi-Kelly, et une mise au
-  plus 25 % du capital (`settings.yaml` → `principal.max_mise`, l'ancien plafond de son fantôme).
+- Mises en Kelly sur un biais supposé de 0,05 : grosses mises à prix élevé. Comme pour son fantôme : Kelly × santé
+  (`sante.py`) et une mise au plus 25 % du capital (`settings.yaml` → `principal.max_mise`).
 
 ## 3. Ce qui a été gardé, retiré, changé (export du 28/10 ; voir §6 pour la suite)
 - **Gardé tel quel** : noyau protégé (`PROTECTED_PATHS.txt` : journal signé, contrôleur, règle n°1, simulateur, frais,
@@ -111,3 +111,16 @@ Détail : `docs/EXPLOITATION.md`. Résumé :
   - vérifié : 258 tests verts, un cycle local réel (1 496 marchés lus, 150 surveillés), tableau de bord sans erreur sur
     téléphone et ordinateur, courbes chargées depuis le journal de production.
   - `CLAUDE.md` (protégé) parle encore de l'arène : proposition de texte dans `proposals/2026-10-29_claude_md_sans_arene.md`.
+- **29/10/2026, mêmes conditions que l'ancien fantôme, suite de son passé** (demande d'Etienne : « comme si c'était un
+  fantôme et que tu reprenais la suite juste après son passé dans l'autre labo ») :
+  - mise : Kelly entier × santé de la stratégie (`sante.py`, réglages `sante_strategies` de l'ancien labo : ½ tant que
+    20 prévisions ne sont pas jugées, 1 si prouvées meilleures que le prix, ¼ sinon ; renfort jusqu'à 2 ; suspension si
+    les frais mangent l'avantage) ; mise ≤ 25 % du capital ; plus de réserve de 3 % (le fantôme n'en avait pas) ;
+  - antécédents : son journal du labo d'origine est relu à chaque cycle (`antecedents.py`, chaîne de hash vérifiée) ;
+    ses 85 paris comptent dans la confiance et dans la mise. Sur ce passé : prudence 1 (85 prévisions jugées, avance
+    +0,0019), renfort 1 (confiance par jour 78 % < 80 %), donc Kelly × 1, comme à la fin de son journal ;
+  - capital : reprise à 1 472,59 € (sa dernière valeur signée) par une remise à zéro qu'Etienne seul peut faire :
+    `proposals/2026-10-29_reprise_du_fantome.md` ; le tableau de bord enchaîne alors sa courbe et celle d'ici ;
+  - vérifié : 263 tests verts, cycle local réel (facteur de mise 1,0), reprise simulée en local, courbes du tableau de bord
+    chargées avec le passé (85 paris, plus haut 1 680 € le 26/10).
+

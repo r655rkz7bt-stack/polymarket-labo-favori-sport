@@ -16,7 +16,8 @@ Fichier libre : Claude peut l'améliorer. Les règles permanentes sont dans `CLA
   réglage s'applique à ce capital. Il n'y a donc plus de comparaison « sur la même période » avec une variante.
 - Réglages : `config/strategies.yaml` (`params` bornés : biais, incertitude, avantage minimal, `kelly_fraction` ; `filtres` :
   familles, plage de prix, heures avant le match, heure UTC, écart, un seul match, mots exclus ; `annuler_au_coup_d_envoi`)
-  et `config/settings.yaml` → `principal` (mise maximale, réserve de liquidités).
+  et `config/settings.yaml` → `principal` (mise maximale, réserve de liquidités facultative) et `sante_strategies`
+  (prudence, renfort, suspension : les règles de mise de l'ancien fantôme, calculées sur son passé puis sur ici).
 - Avant de changer : écrire pourquoi, et ce qu'on attend. Après : noter la date dans `docs/CONTEXTE.md` (journal des
   réglages), pour lire les résultats (confiance, gagnés contre attendus) avant et après, jamais sur quelques paris.
 - Vérifier : `pytest`, puis un cycle local (`run_simulation.py --once --dev-key`) pour voir les abstentions de la stratégie.

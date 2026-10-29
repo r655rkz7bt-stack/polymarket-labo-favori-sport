@@ -17,7 +17,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
-from polymarket_agent import confiance, markout, today
+from polymarket_agent import antecedents, confiance, markout, sante, today
 from polymarket_agent.config import resolve
 from polymarket_agent.ledger import Ledger
 from polymarket_agent.reporting import closed_trades, equity_curve, max_drawdown, read_entries
@@ -90,8 +90,10 @@ def fiche(root: Path, settings: dict | None = None) -> dict:
         raw = yaml.safe_load((Path(root) / "config" / "dashboard.yaml").read_text(encoding="utf-8")) or {}
     except (OSError, yaml.YAMLError):
         raw = {}
-    url = str((raw if isinstance(raw, dict) else {}).get("journaux_url") or "")
-    return {"journaux": url if url.startswith(RAW_PREFIX) and url.endswith("/") else ""}
+    raw = raw if isinstance(raw, dict) else {}
+    url, past = str(raw.get("journaux_url") or ""), str(raw.get("antecedents_url") or "")
+    return {"journaux": url if url.startswith(RAW_PREFIX) and url.endswith("/") else "",
+            "antecedents": past if past.startswith(RAW_PREFIX) and past.endswith(".jsonl.gz") else ""}
 
 
 def principal_orders(entries: list[dict], questions: dict[str, str], open_orders: list[dict],
@@ -180,22 +182,35 @@ def situation(capital: dict, strategies: list[dict], conf: dict) -> dict:
     if not conf.get("operations"):
         detail = "Aucun pari terminé pour l'instant : la confiance se mesurera sur les premiers paris réglés."
     else:
-        detail = (f"{conf['operations']} paris terminés : {conf['gagnees']} gagnés pour {_fr(conf['attendues'])} attendus "
-                  f"d'après les prix payés ; confiance {conf['confiance_pct']} % ({conf['verdict']}).")
-    return {"phrase": f"Le capital principal est tradé par {names}.", "detail": detail}
+        past = (f", dont {conf['anterieures']} dans son ancien fantôme" if conf.get("anterieures") else "")
+        detail = (f"{conf['operations']} paris terminés{past} : {conf['gagnees']} gagnés pour {_fr(conf['attendues'])} "
+                  f"attendus d'après les prix payés ; confiance {conf['confiance_pct']} % ({conf['verdict']}).")
+    phrase = f"Le capital principal est tradé par {names}"
+    phrase += (", qui reprend la suite de son ancien fantôme." if conf.get("reprise") else
+               (" aux conditions de son ancien fantôme." if conf.get("anterieures") else "."))
+    return {"phrase": phrase, "detail": detail}
 
 
-def collect(main: Ledger, db, settings: dict, root: Path, now: datetime | None = None) -> dict:
+def collect(main: Ledger, db, settings: dict, root: Path, now: datetime | None = None,
+            history: list[dict] | None = None) -> dict:
+    """`history` : antécédents de la stratégie (antecedents.load). Leurs paris terminés comptent toujours dans la
+    confiance ; leur courbe précède celle d'ici une fois le capital repris à leur valeur (antecedents.resumed)."""
     now = now or datetime.now(timezone.utc)
+    history = history or []
     state = main.state
     questions = {r[0]: r[1] for r in db.conn.execute(
         "SELECT market_id, question FROM market_snapshots GROUP BY market_id")}
     marks = _marks(db, state.positions)
     entries = read_entries(main)
     trades = closed_trades(entries)
+    resumed = antecedents.resumed(history, entries)
 
-    # --- capital principal et cliquet
+    # --- capital principal et cliquet (précédé de la courbe des antécédents une fois la suite reprise)
     curve = equity_curve(entries)
+    initial = float(state.initial_capital)
+    if resumed:
+        curve = equity_curve(history) + equity_curve(antecedents.since_last_start(entries))
+        initial = float(history[0]["data"]["initial_capital"])
     capital = {k: str(v) for k, v in state.summary(marks).items()}
     capital.update({"capital_realise": str(state.realized_capital().quantize(Decimal("0.01"))),
                     "palier_suivant": str(state.next_target),
@@ -204,7 +219,9 @@ def collect(main: Ledger, db, settings: dict, root: Path, now: datetime | None =
 
     # --- la stratégie et ses indices de confiance
     info = strategy_info(root)
-    conf = confiance.summary(trades)
+    past = closed_trades(history)
+    conf = dict(confiance.summary(antecedents.trades(history, entries)), anterieures=len(past),
+                antecedents_fin=history[-1]["ts"][:16] if history else None, reprise=resumed)
     strategies = list(info.values())
 
     # --- positions ouvertes, avec prévision et incertitude
@@ -289,8 +306,8 @@ def collect(main: Ledger, db, settings: dict, root: Path, now: datetime | None =
         "capital": capital,
         "courbe": _downsample(curve, 600),  # 21/10/2026 : assez de points pour la vue « 24 h »
         "paliers": state.milestones,
-        "capital_initial": float(state.initial_capital),
-        "strategie": {"strategies": strategies, "confiance": conf,
+        "capital_initial": initial,
+        "strategie": {"strategies": strategies, "confiance": conf, "sante": sante.load(db),
                       "abstentions": abstentions.get("strategies") or {}},
         "positions": positions,
         "cloturees": closed[:20],
@@ -357,5 +374,7 @@ def is_due(out_dir: Path, now: datetime, every_minutes: float) -> bool:
 
 
 def build(settings: dict, root: Path, key: bytes, db, now: datetime | None = None) -> Path:
-    data = collect(open_ledger(settings, root, key), db, settings, root, now)
+    past = settings["paths"].get("antecedents")
+    data = collect(open_ledger(settings, root, key), db, settings, root, now,
+                   antecedents.load(resolve(root, past) if past else None))
     return write_site(data, resolve(root, settings["dashboard"]["output_dir"]))

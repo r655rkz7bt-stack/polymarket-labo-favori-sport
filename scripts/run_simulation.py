@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 
 from _common import ROOT, get_key, load_settings, resolve, setup_logging
 
-from polymarket_agent import dashboard
+from polymarket_agent import antecedents, dashboard
 from polymarket_agent.http_client import HttpClient
 from polymarket_agent.main import CycleDeps, run_cycle
 from polymarket_agent.persistence import Database
@@ -84,6 +84,7 @@ def one_cycle(settings: dict, key: bytes) -> int:
                 gamma=GammaClient(http, src["polymarket_gamma"]["base_url"]),
                 clob=ClobClient(http, src["polymarket_clob"]["base_url"],
                                 batch_size=src["polymarket_clob"]["books_batch_size"]),
+                history=antecedents.load(resolve(ROOT, paths["antecedents"]) if paths.get("antecedents") else None),
             )
             report = run_cycle(deps)
             site = maybe_build_dashboard(settings, key, db, report)

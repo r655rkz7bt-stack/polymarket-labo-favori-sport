@@ -32,7 +32,7 @@ def test_repository_config_loads():
     s = loaded[0]
     assert isinstance(s, PatientOrders) and isinstance(s.inner, Filtered)
     assert s.inner.filters == {"familles": ["sports"], "prix_min": 0.85, "prix_max": 0.875}
-    assert s.params["kelly_fraction"] == D("0.5") and s.params["bias"] == D("0.05")
+    assert s.params["kelly_fraction"] == D("1.0") and s.params["bias"] == D("0.05")
     assert s.annuler_au_coup_d_envoi is False
 
 
