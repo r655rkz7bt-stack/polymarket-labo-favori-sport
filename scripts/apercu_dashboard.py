@@ -1,4 +1,4 @@
-"""Aperçu du tableau de bord AVANT publication (pour le chercheur, 17/10/2026).
+"""Aperçu du tableau de bord AVANT publication (17/10/2026).
 
 Reconstruit la page avec les DERNIÈRES DONNÉES PUBLIÉES (published/data.json, sinon téléchargées
 depuis GitHub Pages) et le gabarit + la mise en page ACTUELS du dépôt (dashboard_template.html,
@@ -25,7 +25,7 @@ from _common import ROOT
 
 from polymarket_agent import dashboard
 
-PUBLIC_URL = "https://r655rkz7bt-stack.github.io/Polymarket-autonomus-lab/data.json"
+PUBLIC_URL = "https://r655rkz7bt-stack.github.io/polymarket-labo-favori-sport/data.json"
 OUT = ROOT / "apercu"
 CHECK_JS = r"""
 const { chromium } = require('playwright');
@@ -97,7 +97,7 @@ def main() -> int:
     args = parser.parse_args()
     data = load_data()
     data["mise_en_page"] = dashboard.layout(ROOT)  # mise en page du dépôt, pas celle publiée
-    data["fiche"] = dashboard.fiche(ROOT)  # fiche d'une stratégie : réglages du dépôt
+    data["fiche"] = dashboard.fiche(ROOT)  # courbes de la stratégie : réglages du dépôt
     OUT.mkdir(exist_ok=True)
     page = OUT / "index.html"
     page.write_text(dashboard.render(data), encoding="utf-8")

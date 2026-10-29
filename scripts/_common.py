@@ -35,14 +35,6 @@ def get_key(dev_key: bool) -> bytes:
     return DEV_KEY_PATH.read_text(encoding="utf-8").strip().encode("utf-8")
 
 
-def load_settings_with_arena() -> dict:
-    """Réglages + règles de l'arène (config/promotion.yaml) sous la clé « arena »."""
-    import yaml
-    settings = load_settings()
-    settings["arena"] = yaml.safe_load((ROOT / "config" / "promotion.yaml").read_text(encoding="utf-8"))
-    return settings
-
-
 def setup_logging(settings: dict) -> None:
     log_dir = resolve(ROOT, settings["paths"]["logs"])
     log_dir.mkdir(parents=True, exist_ok=True)

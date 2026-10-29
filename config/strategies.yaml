@@ -3,19 +3,24 @@
 # (au 28/10/2026 23 h 48 UTC : 1 484 € fictifs en 8,3 jours, 85 opérations, confiance 90 %, verdict « indéterminée » ;
 # la veille 1 566 €, 74 opérations, 98 %, « prometteuse »). Contexte complet : docs/CONTEXTE.md.
 #
-# ARÈNE : chaque stratégie activée trade dans son propre portefeuille fantôme (1 000 virtuels, vrais carnets).
-# Le capital principal suit le champion choisi par src/polymarket_agent/arena.py (règles : config/promotion.yaml).
-# Pour tester une idée : ajouter une variante ci-dessous (même `class`, autre nom, autres réglages ou `filtres`) ;
-# elle aura son propre fantôme et sa propre confiance, à comparer à l'originale sur la même période.
+# 29/10/2026 (décision d'Etienne) : plus d'arène ni de fantômes. La stratégie trade DIRECTEMENT le capital principal
+# (journal signé, règle « à 0 € tu meurs »). Plafonds du principal : config/settings.yaml → principal.
+# Pour essayer un autre réglage : changer les valeurs ci-dessous (bornes min/max vérifiées au chargement) et noter
+# la date du changement dans docs/CONTEXTE.md, pour savoir à partir de quand les résultats le reflètent.
 
 nf_sport_patiente_prix_850_875:
-  explication: "Le favori d'un match (sport ou e-sport), acheté en posant l'ordre 1 cran au-dessus du meilleur acheteur et en attendant un vendeur, seulement quand le prix payé est entre 0,85 et 0,875."
+  explication: "Le favori d'un match (sport ou e-sport), acheté en posant l'ordre 1 cran au-dessus du meilleur acheteur et en attendant un vendeur, seulement quand le prix du vendeur est entre 0,85 et 0,875."
   # Origine : favori naïf (« le favori gagne un peu plus souvent que son prix ») → sport → mode patient → morceau de prix
   # 0,850-0,875 (entonnoir 80/20 du 20/10/2026). Attention : c'était la meilleure de plusieurs dizaines de stratégies de
   # favoris ; une part de son avance peut venir de la chance. Ce laboratoire sert justement à la mettre à l'épreuve.
   class: naive_favorite
   limit_ticks: 1
   filtres: {familles: [sports], prix_min: 0.85, prix_max: 0.875}
+  # Ordres posés annulés au coup d'envoi : false = comme dans l'ancien labo (ses 85 positions mesurées). Dans l'ancien labo,
+  # les ordres posés servis PENDANT le match perdaient −9,8 % par pari toutes stratégies confondues (sélection adverse) ;
+  # pour celle-ci : +2,3 % en match contre +10,2 % avant (docs/CONTEXTE.md). Mettre true pour ne jouer qu'avant le match
+  # (ordres posés annulés au coup d'envoi ET aucun nouveau pari une fois le match commencé).
+  annuler_au_coup_d_envoi: false
   enabled: true
   version: "1.0.0"
   created_at: "2026-10-20"
@@ -27,30 +32,6 @@ nf_sport_patiente_prix_850_875:
     min_net_edge:   {value: 0.01, min: 0.00, max: 0.50}
     max_extra_ticks: {value: 2, min: 0, max: 5}
     max_proposals_per_cycle: {value: 3, min: 0, max: 50}
-    kelly_fraction:  {value: 1.0, min: 0.0, max: 5.0}
-
-nf_sport_patiente_prix_850_875_avant_match:
-  explication: "La n° 1 de l'arène (favori de sport payé 0,85-0,875, achat posé), mais son ordre posé tombe au coup d'envoi : jamais servi pendant que le match se joue."
-  # Sœur de `nf_sport_patiente_prix_850_875` (28/10/2026, enquête « posées en match » du labo d'origine, résumée dans docs/CONTEXTE.md), pas une fille (la mère en a déjà 10) : mêmes paramètres, même filtre, seule
-  # différence : `annuler_au_coup_d_envoi`. Les ordres posés servis en match perdent 9,8 % par pari (320 jetons, z −2,8, −8,2 % avant le 25/10, −12,7 % depuis) contre −0,3 % pour un achat immédiat ;
-  # chez la n° 1, 35 paris posés en match : −2,9 % (−132 €), les 45 autres +8,1 % (+459 €). Cette sœur dit si son gain tient sans la part exposée à la sélection adverse. À juger sur la MÊME période.
-  morceau: "prix payé 0,850-0,875, ordres annulés au coup d'envoi"
-  class: naive_favorite
-  limit_ticks: 1
-  annuler_au_coup_d_envoi: true
-  filtres: {familles: [sports], prix_min: 0.85, prix_max: 0.875, heures_min: 0}  # heures_min 0 : plus aucun NOUVEL ordre une fois le match commencé
-  enabled: true
-  version: "1.0.0"
-  created_at: "2026-10-28"
-  hypothesis: >
-    Le gain de la n° 1 vient des paris posés avant le match ; sans les paris posés servis en match (sélection adverse, −9,8 % sur 320 jetons) la sœur fait au moins aussi bien. Une perte
-    apprendrait que le gain de la n° 1 dépendait de paris en match qui gagnent autant que leurs prix (35 paris : 30,5 gagnés pour 29,8 attendus) ou que le mode patient avant le match ne suffit pas.
-  params:
-    min_ask:        {value: 0.80, min: 0.50, max: 0.97}
-    max_ask:        {value: 0.95, min: 0.60, max: 0.98}
-    bias:           {value: 0.05, min: 0.00, max: 0.06}
-    uncertainty:    {value: 0.015, min: 0.01, max: 0.10}
-    min_net_edge:   {value: 0.01, min: 0.00, max: 0.50}
-    max_extra_ticks: {value: 2, min: 0, max: 5}
-    max_proposals_per_cycle: {value: 3, min: 0, max: 50}
-    kelly_fraction:  {value: 1.0, min: 0.0, max: 5.0}
+    # Demi-Kelly (29/10/2026) : la mise de base de son ancien fantôme, où la « santé des stratégies » la réduisait de moitié
+    # tant que son avantage n'était pas prouvé (son premier achat : 64 € sur 1 000, environ la moitié du Kelly entier).
+    kelly_fraction:  {value: 0.5, min: 0.0, max: 5.0}

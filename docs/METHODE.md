@@ -5,20 +5,21 @@ Fichier libre : Claude peut l'améliorer. Les règles permanentes sont dans `CLA
 ## Méthode de travail
 
 - Tests avec `pytest`. Tout défaut découvert donne lieu à un test de non-régression.
-- Petits commits clairs ; branches `claude/` et pull requests vers `main`, fusionnées automatiquement si `guard` et `tests` passent.
+- Petits commits clairs ; branches `claude/` et pull requests vers `main` (fusion automatique si `guard` et `tests` passent et si « Allow auto-merge » est activé, sinon Etienne clique « Merge »).
 - Dépendances peu nombreuses, versions épinglées dans `requirements.txt`.
 - Avant d'utiliser un endpoint Polymarket, vérifie sa documentation actuelle sur docs.polymarket.com : frais et limites changent.
 - Si un domaine réseau est bloqué (erreur 403 `host_not_allowed`), dis à Etienne exactement quel domaine ajouter.
 
-## Tester une idée sur la stratégie
+## Changer un réglage de la stratégie
 
-- Une idée = une **variante** dans `config/strategies.yaml` : même `class: naive_favorite`, un autre nom qui commence
-  par `nf_sport_patiente_prix_850_875` (il est alors protégé du retrait pour inactivité), d'autres réglages (`params`),
-  d'autres `filtres` (familles, plage de prix, heures avant le match, issue…), ou `annuler_au_coup_d_envoi: true`.
-  Écrire l'hypothèse (`hypothesis`) et ce qu'une perte apprendrait.
-- Chaque variante a son propre fantôme (1 000 € fictifs) : on la compare à l'originale **sur la même période**, avec la
-  confiance de l'arène (score t, pourcentage, verdict) et les gagnés contre attendus, jamais sur quelques paris.
-- Le capital principal suit automatiquement la meilleure (règles : `config/promotion.yaml`).
+- Depuis le 29/10/2026 il n'y a plus d'arène : la stratégie trade directement le capital principal, et un changement de
+  réglage s'applique à ce capital. Il n'y a donc plus de comparaison « sur la même période » avec une variante.
+- Réglages : `config/strategies.yaml` (`params` bornés : biais, incertitude, avantage minimal, `kelly_fraction` ; `filtres` :
+  familles, plage de prix, heures avant le match, heure UTC, écart, un seul match, mots exclus ; `annuler_au_coup_d_envoi`)
+  et `config/settings.yaml` → `principal` (mise maximale, réserve de liquidités).
+- Avant de changer : écrire pourquoi, et ce qu'on attend. Après : noter la date dans `docs/CONTEXTE.md` (journal des
+  réglages), pour lire les résultats (confiance, gagnés contre attendus) avant et après, jamais sur quelques paris.
+- Vérifier : `pytest`, puis un cycle local (`run_simulation.py --once --dev-key`) pour voir les abstentions de la stratégie.
 
 ## Commandes
 

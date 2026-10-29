@@ -5,79 +5,44 @@ mode: simulation
 
 paths:
   ledger: ledger/ledger.jsonl
-  shadow_dir: ledger/fantome   # journaux des stratégies en mode « fantome »
   bankruptcy_lock: ledger/BANKRUPT.lock
   database: state/market.sqlite
   logs: logs
   cycle_lock: state/cycle.lock
 
 cycle:
-  # 29/10/2026 : 2 = intervalle réel entre deux cycles (cron-job.org réglé toutes les 2 min par Etienne). Sert aux identifiants
-  # d'opération idempotents ET à la durée créditée par cycle aux récompenses estimées (liquidité, détention) : à garder égal
-  # à l'intervalle de cron-job.org, sinon ces estimations sont fausses (à 5 pour des cycles de 2 min : comptées 2,5 fois).
+  # 29/10/2026 : 2 = intervalle entre deux cycles (cron-job.org réglé toutes les 2 min par Etienne). Sert aux identifiants
+  # d'opération idempotents (une même décision, relancée dans le même créneau, n'est jamais comptée deux fois) et au
+  # rythme d'archivage du scan complet. À garder égal à l'intervalle de cron-job.org.
   bucket_minutes: 2
-  battement_fantomes_minutes: 30   # 21/10/2026 : battement d'un fantôme inactif au plus toutes les 30 min (journaux 6× plus légers)
   reglements_par_lot: 100      # 21/10/2026 : marchés détenus lus par lots de 100 pour les règlements (723 requêtes → ~16)
 
 
-# Ordres à cours limité posés dans le carnet (stratégies en mode « patient », limit_ticks).
-# Exécutés seulement si le marché passe AU TRAVERS du prix (execution_simulator.py).
-# Capital principal (17/10/2026, AMELIORATION n°6), libre : plafonds du SEUL portefeuille principal
-# (les fantômes ne sont pas plafonnés : l'arène mesure chaque stratégie telle qu'elle est).
+# Capital principal (29/10/2026 : la stratégie le trade directement, sans arène), libre :
 principal:
-  max_mise: 0.10      # un achat ≤ 10 % du capital estimé (Kelly complet allait jusqu'à 40 %)
-  max_famille: 0.40   # ≤ 40 % du capital engagé dans une même famille (météo, sport…) : paris liés
-  # Plancher de copie (26/10/2026) : le principal copie les paris des fantômes à l'échelle de sa part ; quand la copie tombe sous le
-  # minimum du marché (5 parts), le pari était rejeté (« taille inférieure au minimum du marché (5) ») : `moins_de_cartes`, 14,6 % du
-  # capital, 0 pari copié sur 70. Il achète alors le minimum (5 parts) si cela coûte au plus 1 % du capital et reste dans le budget de la part.
-  plancher_copie: {parts: 5, part_du_capital: 0.01}
-  # Mise copiée plafonnée (27/10/2026, experiments/taille_des_mises.md, « ce qui marchait ») : chaque pari d'un fantôme compte au plus
-  # pour 5 % de SON capital avant la mise à l'échelle du principal. Rejeu du 15 au 26/10 : −262 € → −46 €, −2,6 % → −1,0 % par euro
-  # (les grosses mises, sur les favoris à 0,90 ou plus, perdaient −11,5 % par euro). Les fantômes, eux, misent toujours normalement.
-  mise_fantome_max: 0.05
-  # Réserve de liquidités (27/10/2026, demande d'Etienne : « plus de liberté… regarde l'objectif plutôt que la mort prochaine ») :
-  # le principal peut miser plus gros sur ce qui gagne (config/promotion.yaml : renfort jusqu'à ×3, une stratégie jusqu'à tout
-  # le capital), mais un achat ne laisse jamais moins de 3 % du capital estimé en argent disponible. La faillite tombe à 0 €
-  # DISPONIBLE, même avec des positions qui valent quelque chose : ce coussin empêche qu'une mise la provoque par accident.
-  reserve_liquidites: 0.03
-  # Ordres posés et coup d'envoi (28/10/2026, experiments/enquetes/2026-10-28_soir_posees_en_match.md) : un achat POSÉ n'est servi que quand le prix
-  # descend jusqu'à lui ; en match, c'est un but ou une blessure. 320 jetons (un par jeton, tous les fantômes) : −9,8 % par pari, z −2,8, z par
-  # événement −3,0 ; 209 avant le 25/10 : −8,2 % ; 111 depuis : −12,7 % ; achats immédiats en match −0,3 %. Le principal annule donc ses ordres
-  # posés quand le match commence (les fantômes continuent de les subir : c'est la mesure). À retirer par un rejeu si l'effet disparaît.
-  annuler_posees_au_coup_d_envoi: true
-
-# Fantômes (23/10/2026, enquête « mises géantes ») : une mise ≤ 25 % du capital estimé du fantôme.
-# Mêmes paris, taille seulement : la confiance de l'arène se mesure sur le rendement par mise.
-fantomes:
+  # Une mise ≤ 25 % du capital estimé (23/10/2026, plafond de l'ancien fantôme de la stratégie) : Kelly sur un biais
+  # fixe de +0,05 misait jusqu'à la moitié du capital sur un seul pari.
   max_mise: 0.25
+  # Réserve de liquidités (27/10/2026) : un achat ne laisse jamais moins de 3 % du capital estimé en argent disponible.
+  # La faillite tombe à 0 € DISPONIBLE, même avec des positions qui valent quelque chose : ce coussin empêche qu'une
+  # mise la provoque par accident.
+  reserve_liquidites: 0.03
 
 # Deux camps d'un même match (23/10/2026, contrôle `deux_camps`) : pas d'achat au-dessus de `prix_min`
 # d'un jeton d'un marché où le portefeuille tient déjà un autre jeton payé au-dessus de ce prix.
 deux_camps:
   prix_min: 0.70
 
-# Récompenses de liquidité (option A d'Etienne, 17/10/2026, libre) : les récompenses ESTIMÉES des
-# journées terminées (≥ 1 $, plafonnées à la cagnotte du marché) × prudence comptent dans le
-# CLASSEMENT de l'arène, jamais dans le capital d'un fantôme. Le versement au capital public
-# attend le noyau : proposals/2026-10-17_recompenses_au_capital.md.
-recompenses:
-  classement_arene: true
-  prudence: 0.5       # estimation sans doute trop optimiste : on n'en compte que la moitié
-  # Récompense de DÉTENTION (19/10/2026) : taux annuel versé par Polymarket sur la valeur des positions
-  # des marchés éligibles (Gamma holdingRewardsEnabled) ; estimée comme ci-dessus (holding_rewards.py).
-  detention_taux_annuel: 0.04
-
-# Relecture avant d'acheter (enquête du 20/10/2026, experiments/enquetes/2026-10-20_carnet_perime.md) :
-# si le prix de vente a chuté de plus de `chute_max` depuis le début du cycle, l'estimation de la
-# stratégie est périmée → pas d'achat ce cycle-ci (sauf jambes d'arbitrage).
+# Relecture avant d'acheter (enquête du 20/10/2026) : si le prix de vente a chuté de plus de `chute_max`
+# depuis le début du cycle, l'estimation de la stratégie est périmée → pas d'achat ce cycle-ci.
 relecture:
   chute_max: 0.03
-  sauf: [paire_oui_non, echelle_dates, coherence_match, implication_politique, marches_jumeaux, cross_market,
-         outsiders_surcotes]
 
+# Ordres à cours limité posés dans le carnet (mode « patient », limit_ticks). Exécutés seulement si le
+# marché passe AU TRAVERS du prix (execution_simulator.py).
 limit_orders:
   max_age_hours: 6            # durée de vie maximale d'un ordre posé
-  max_open_per_portfolio: 60   # ordres ouverts au plus par portefeuille (tenue de marché : 25 marchés × 2, 17/10/2026)
+  max_open_per_portfolio: 60   # ordres ouverts au plus
 
 http:
   timeout_seconds: 15
@@ -95,16 +60,8 @@ scanner:
   min_volume_24h: 1000
   max_spread: 0.05
   max_favorite_price: 0.99     # au-delà, l'issue est pratiquement connue : rien à gagner
-  watchlist_size: 150          # marchés suivis en détail (carnets, actualités) à chaque cycle
+  watchlist_size: 150          # marchés suivis en détail (carnets) à chaque cycle : les plus échangés
   full_snapshot_every_minutes: 30   # archiver tout le scan seulement toutes les 30 min
-  # Laboratoire dédié : pas de pages supplémentaires (marchés longs, échus, étiquettes, séries) ; elles ne servaient
-  # qu'aux stratégies qui les demandaient. nf_sport_patiente_prix_850_875 joue la liste de surveillance.
-  holding_pages: 0
-  long_pages: 0
-  ended_pages: 0
-  ended_min_hours: 1
-  ended_max_hours: 72
-  max_extra_markets: 40
 
 database:
   max_megabytes: 40
@@ -119,26 +76,6 @@ sources:
     base_url: https://clob.polymarket.com
     books_batch_size: 20
 
-# Règles de l'arène : config/promotion.yaml (libre depuis le 15/10/2026, lu par les scripts).
-
 dashboard:
-  output_dir: site             # page statique publiée sur GitHub Pages (étape 9)
+  output_dir: site             # page statique publiée sur GitHub Pages
   every_minutes: 10            # GitHub Pages limite à ~10 publications/heure ; la page se recharge seule
-
-# Santé des stratégies (strategy_health.py, décision d'Etienne du 15/10/2026), libre :
-# mise réduite tant que les prévisions ne sont pas prouvées meilleures que le marché, et
-# suspension d'une stratégie gagnante avant frais mais perdante après.
-sante_strategies:
-  min_resolved: 20          # prévisions jugées (marchés réglés) avant de conclure
-  base: 0.5                 # part de la mise habituelle tant que rien n'est prouvé (½ Kelly)
-  proven: 1.0               # prouvée meilleure que le prix du marché
-  disproven: 0.25           # prouvée moins bonne
-  suspension_min_closed: 20 # opérations clôturées avant de pouvoir suspendre
-  outcomes_per_hour: 15     # marchés interrogés par heure pour juger les prévisions
-  # 21/10/2026 (« grossir les gagnantes », experiments/grossir_gagnantes.md) : les prévisions réglées
-  # sont aussi lues dans le journal du fantôme (avant : 15 vérifications par heure pour toute l'arène,
-  # personne n'atteignait 20 jugées). Renfort : une stratégie qui prouve PLUS d'avantage qu'elle n'en
-  # suppose (≥ 30 opérations, confiance par jour ≥ 80 %) mise jusqu'à 2 fois plus dans son fantôme.
-  # Le capital principal, lui, copie toujours à la mise de base et reçoit son propre renfort par
-  # l'arène (config/promotion.yaml → mise_avantage_mesure). Libre : le chercheur peut le régler.
-  renfort: {min_operations: 30, confiance_jour_min: 0.8, paris_fictifs: 30, max: 2.0}

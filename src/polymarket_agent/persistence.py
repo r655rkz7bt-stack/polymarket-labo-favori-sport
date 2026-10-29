@@ -82,39 +82,7 @@ CREATE TABLE IF NOT EXISTS decisions (
     proposal TEXT,
     PRIMARY KEY (op_id, cycle_id)
 );
-CREATE TABLE IF NOT EXISTS observations (
-    source TEXT NOT NULL,
-    external_id TEXT NOT NULL,
-    published_at TEXT,
-    collected_at TEXT NOT NULL,
-    url TEXT,
-    title TEXT,
-    text TEXT,
-    author TEXT,
-    domain TEXT,
-    kind TEXT,
-    sentiment REAL,
-    reliability REAL,
-    uncertainty TEXT,
-    engagement INTEGER,
-    dup_key TEXT,
-    duplicate_of TEXT,
-    delay_seconds REAL,
-    market_ids TEXT,
-    data TEXT,
-    PRIMARY KEY (source, external_id)
-);
-CREATE INDEX IF NOT EXISTS idx_observations_time ON observations(collected_at);
-CREATE TABLE IF NOT EXISTS source_runs (source TEXT PRIMARY KEY, last_run TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS llm_calls (day TEXT PRIMARY KEY, calls INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS stances (
-    market_id TEXT NOT NULL,
-    external_id TEXT NOT NULL,
-    stance TEXT NOT NULL,
-    collected_at TEXT NOT NULL,
-    PRIMARY KEY (market_id, external_id)
-);
 CREATE TABLE IF NOT EXISTS pending_orders (
     op_id TEXT PRIMARY KEY,
     portfolio TEXT NOT NULL,
@@ -232,65 +200,14 @@ class Database:
              _s(fill.fee) if fill else None, json.dumps(payload, ensure_ascii=False)))
         self.conn.commit()
 
-    # ------------------------------------------------------------------ observations
-
-    def save_observations(self, observations) -> None:
-        rows = [(o.source, o.external_id, _iso(o.published_at), _iso(o.collected_at), o.url, o.title,
-                 o.text, o.author, o.domain, o.kind, o.sentiment, o.reliability, o.uncertainty,
-                 o.engagement, o.dup_key, o.duplicate_of, o.delay_seconds,
-                 json.dumps(o.market_ids), json.dumps(o.data, ensure_ascii=False, default=str))
-                for o in observations]
-        self.conn.executemany("INSERT OR IGNORE INTO observations VALUES "
-                              "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows)
-        self.conn.commit()
-
-    def recent_dup_keys(self, since: datetime) -> set[str]:
-        return {r[0] for r in self.conn.execute(
-            "SELECT dup_key FROM observations WHERE collected_at >= ?", (_iso(since),))}
-
-    def recent_observations(self, since: datetime) -> list[dict]:
-        cur = self.conn.execute("SELECT * FROM observations WHERE collected_at >= ?", (_iso(since),))
-        return [dict(r) for r in cur]
-
-    def source_last_run(self, source: str) -> datetime | None:
-        row = self.conn.execute("SELECT last_run FROM source_runs WHERE source=?", (source,)).fetchone()
-        return datetime.fromisoformat(row[0]) if row else None
-
-    def set_source_run(self, source: str, when: datetime) -> None:
-        self.conn.execute("INSERT OR REPLACE INTO source_runs VALUES (?, ?)", (source, _iso(when)))
-        self.conn.commit()
-
     def get_value(self, key: str) -> str | None:
-        """Petite mémoire entre cycles (ex. nom du modèle Gemini trouvé). Jamais de capital ici."""
+        """Petite mémoire entre cycles (durées, abstentions). Jamais de capital ici."""
         row = self.conn.execute("SELECT value FROM kv WHERE key=?", (key,)).fetchone()
         return row[0] if row else None
 
     def set_value(self, key: str, value: str) -> None:
         self.conn.execute("INSERT OR REPLACE INTO kv VALUES (?, ?, ?)",
                           (key, value, datetime.now(timezone.utc).isoformat()))
-        self.conn.commit()
-
-    def get_stances(self, market_id: str, external_ids: list[str]) -> dict[str, dict]:
-        """Classements Gemini déjà faits pour ce marché : on ne repaie jamais deux fois un texte."""
-        if not external_ids:
-            return {}
-        marks = ",".join("?" * len(external_ids))
-        rows = self.conn.execute(f"SELECT external_id, stance FROM stances WHERE market_id=? "
-                                 f"AND external_id IN ({marks})", (market_id, *external_ids)).fetchall()
-        return {r[0]: json.loads(r[1]) for r in rows}
-
-    def save_stances(self, market_id: str, stances: dict[str, dict], now: datetime) -> None:
-        self.conn.executemany("INSERT OR REPLACE INTO stances VALUES (?, ?, ?, ?)",
-                              [(market_id, ext, json.dumps(v), _iso(now)) for ext, v in stances.items()])
-        self.conn.commit()
-
-    def llm_calls(self, day: str) -> int:
-        row = self.conn.execute("SELECT calls FROM llm_calls WHERE day=?", (day,)).fetchone()
-        return int(row[0]) if row else 0
-
-    def count_llm_call(self, day: str) -> None:
-        self.conn.execute("INSERT INTO llm_calls VALUES (?, 1) ON CONFLICT(day) DO UPDATE SET calls = calls + 1",
-                          (day,))
         self.conn.commit()
 
     # ------------------------------------------------------------------ ancrage
@@ -327,12 +244,11 @@ class Database:
         self.conn.commit()
         return cur.rowcount > 0
 
-    def cancel_open_orders(self, portfolio: str, token_id: str, side: str, now: datetime) -> int:
-        """Annule les ordres ouverts du portefeuille sur ce jeton et ce sens (copie dont la source a changé
-        d'avis : le principal ne garde pas un prix que le fantôme copié a abandonné)."""
-        cur = self.conn.execute("UPDATE pending_orders SET status='ANNULE', updated_at=? WHERE portfolio=? "
-                                "AND token_id=? AND side=? AND status='OUVERT'",
-                                (_iso(now), portfolio, token_id, side))
+    def cancel_orders_except(self, portfolio: str, now: datetime) -> int:
+        """Annule les ordres ouverts des AUTRES portefeuilles (anciens fantômes, avant le 29/10/2026) : plus aucun
+        cycle ne les suit ; sans cela ils resteraient « ouverts » pour toujours dans la base et le tableau de bord."""
+        cur = self.conn.execute("UPDATE pending_orders SET status='ANNULE', updated_at=? WHERE portfolio != ? "
+                                "AND status='OUVERT'", (_iso(now), portfolio))
         self.conn.commit()
         return cur.rowcount
 
@@ -353,7 +269,7 @@ class Database:
         """Base tournante : supprime les plus vieux snapshots si la taille dépasse le plafond."""
         if self.path.stat().st_size <= max_megabytes * 1024 * 1024:
             return False
-        for table in ("book_snapshots", "market_snapshots", "observations", "stances"):
+        for table in ("book_snapshots", "market_snapshots"):
             self.conn.execute(
                 f"DELETE FROM {table} WHERE rowid IN (SELECT rowid FROM {table} "
                 f"ORDER BY collected_at LIMIT (SELECT COUNT(*) / 4 FROM {table}))")

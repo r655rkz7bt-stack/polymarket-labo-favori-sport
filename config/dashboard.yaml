@@ -1,12 +1,12 @@
-# Mise en page du tableau de bord — LIBRE : le chercheur la règle (décision d'Etienne, 17/10/2026).
+# Mise en page du tableau de bord — libre (décision d'Etienne, 17/10/2026).
 # Ce que voit Etienne en premier doit être ce qui compte le plus pour lui (il lit sur iPad / téléphone).
-# Méthode et garde-fous : docs/TABLEAU_DE_BORD.md. Aperçu avant publication : scripts/apercu_dashboard.py.
+# Aperçu avant publication : scripts/apercu_dashboard.py.
 
-# Ordre des blocs, du haut vers le bas. Identifiants possibles : organisme, resume, principal, aujourdhui, arene, entonnoir, capital,
-# positions, ordres-poses, decisions-recentes, journal, systeme.
+# Ordre des blocs, du haut vers le bas. Identifiants possibles : organisme, resume, principal, aujourdhui, strategie,
+# capital, positions, ordres-poses, decisions-recentes, journal, systeme.
 # Un bloc absent de la liste garde sa place après les blocs listés.
 # 21/10/2026 (demande d'Etienne) : la courbe du capital juste sous le cœur.
-ordre: [organisme, capital, resume, principal, aujourdhui, arene, entonnoir, positions, journal, ordres-poses, decisions-recentes, systeme]
+ordre: [organisme, capital, resume, strategie, principal, aujourdhui, positions, journal, ordres-poses, decisions-recentes, systeme]
 
 # Blocs cachés (jugés superflus). « resume » et « capital » ne peuvent PAS être cachés (règle n°1 :
 # capital, solde disponible et faillite toujours visibles) : le code les réaffiche.
@@ -15,18 +15,17 @@ masquer: []
 # Blocs REPLIÉS au départ : seul leur titre et une ligne de résumé restent visibles ; un toucher sur
 # le titre les ouvre (le navigateur d'Etienne retient son choix). Le cœur, le résumé et le capital
 # ne se replient jamais.
-replier: [entonnoir, ordres-poses, journal, decisions-recentes, systeme]
+replier: [ordres-poses, journal, decisions-recentes, systeme]
 
-# « À la une » : au plus 5 points courts (280 caractères chacun), écrits par le chercheur, en tête
-# du résumé : ce qu'il juge le plus important pour Etienne en ce moment. Des faits, avec leur source
-# (arène, test sur le passé…), jamais une promesse de gain. Vide = pas d'encadré.
+# « À la une » : au plus 5 points courts (280 caractères chacun), en tête du résumé : ce qui compte le
+# plus pour Etienne en ce moment. Des faits, avec leur source, jamais une promesse de gain. Vide = pas d'encadré.
 a_la_une:
-  date: "2026-10-28"
+  date: "2026-10-29"
   points:
-    - "Laboratoire dédié à une seule stratégie, nf_sport_patiente_prix_850_875 (favori de sport payé 0,85-0,875, ordre posé). Elle repart de 1 000 € fictifs ; le capital principal ne la suivra qu'après ses premières preuves (12 opérations, croissance et confiance suffisantes)."
+    - "Plus d'arène : nf_sport_patiente_prix_850_875 (favori de sport, prix du vendeur 0,85-0,875, ordre posé) trade directement le capital principal, à demi-Kelly, une mise au plus 25 % du capital. Départ : 1 000 € fictifs."
 
-# Fiche d'une stratégie (demande d'Etienne, 21/10/2026) : toucher une ligne de l'arène charge le
-# journal PUBLIC de la stratégie depuis cette adresse (branche « data » du dépôt) et calcule ses
-# courbes dans le navigateur, à ce moment-là. Seule une adresse raw.githubusercontent.com finissant
-# par « / » est acceptée (sinon la page la déduit de son adresse GitHub Pages).
-journaux_url: "https://raw.githubusercontent.com/r655rkz7bt-stack/polymarket-labo-favori-sport/data/ledger/fantome/"
+# Courbes de la stratégie : le bouton « Voir ses courbes » charge le journal PUBLIC du capital principal
+# (fichier ledger.jsonl de la branche « data ») depuis cette adresse et calcule les courbes dans le navigateur.
+# Seule une adresse raw.githubusercontent.com finissant par « / » est acceptée (sinon la page la déduit de
+# son adresse GitHub Pages).
+journaux_url: "https://raw.githubusercontent.com/r655rkz7bt-stack/polymarket-labo-favori-sport/data/ledger/"
