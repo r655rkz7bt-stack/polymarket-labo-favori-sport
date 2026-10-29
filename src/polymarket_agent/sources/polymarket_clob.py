@@ -68,21 +68,6 @@ class ClobClient:
         raw = self.http.get_json(f"{self.base_url}/book", params={"token_id": token_id})
         return parse_book(raw, self._clock())
 
-    def get_price_history(self, token_id: str, start_ts: int, end_ts: int,
-                          fidelity: int = 60) -> list[tuple[int, float]]:
-        """Série de prix (horodatage, prix), triée. Même endpoint que l'historique des backtests."""
-        raw = self.http.get_json(f"{self.base_url}/prices-history", params={
-            "market": token_id, "startTs": start_ts, "endTs": end_ts, "fidelity": fidelity})
-        points = []
-        for item in (raw or {}).get("history") or []:
-            try:
-                t, p = int(item["t"]), float(item["p"])
-            except (KeyError, TypeError, ValueError):
-                continue
-            if t <= end_ts and 0 <= p <= 1:
-                points.append((t, p))
-        return sorted(points)
-
     def get_books(self, token_ids: list[str]) -> dict[str, OrderBook]:
         books: dict[str, OrderBook] = {}
         for start in range(0, len(token_ids), self.batch_size):

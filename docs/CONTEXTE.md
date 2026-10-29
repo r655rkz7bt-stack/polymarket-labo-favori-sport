@@ -20,7 +20,7 @@
 - **mode patient** (`limit_ticks: 1`) : ordre posé 1 cran au-dessus du meilleur acheteur, servi seulement si un vendeur
   traverse ce prix (`execution_simulator.simulate_resting_buy`) ; souvent sans frais (maker) ;
 - **filtre de prix** : il porte sur le prix du vendeur (ask), entre 0,85 et 0,875 ; l'ordre posé peut donc être un peu plus
-  bas (premier achat : 0,84) ; mise de Kelly entier sur l'avantage supposé.
+  bas (premier achat : 0,84) ; mise de Kelly sur l'avantage supposé (ici comme dans son ancien fantôme : Kelly × prudence × renfort, `sante.py`).
 Historique : favori naïf → « sport » → « patient » (17/10) → morceau de prix 0,850-0,875 trouvé par l'entonnoir 80/20 (20/10).
 
 ### Chiffres dans le labo d'origine (fantôme, vrais carnets, frais compris)
@@ -40,12 +40,13 @@ gagnées pour 72,5 attendues par leurs prix (z +1,08)**, +484 € sur 11 132 €
   de prix de favori n'était régulièrement gagnante** ; 0,85-0,875 à 3 h : −1,2 % (435 paris).
 - **Ordres posés servis pendant le match** : dans tout le labo d'origine ils perdaient −9,8 % par pari (320 jetons, z −2,8),
   contre −0,3 % pour un achat immédiat : le marché vient « traverser » notre prix surtout quand le match tourne mal pour le
-  favori (sélection adverse). D'où la sœur `nf_sport_patiente_prix_850_875_avant_match` (ordres annulés au coup d'envoi,
-  aucun nouvel ordre une fois le match commencé), créée le 28/10 et reprise ici, à comparer sur la même période.
-- Mises en Kelly entier sur un biais supposé de 0,05 : grosses mises à prix élevé ; les fantômes sont plafonnés à 25 % de
-  leur capital par pari (`settings.yaml` → `fantomes.max_mise`).
+  favori (sélection adverse). Le réglage `annuler_au_coup_d_envoi: true` (config/strategies.yaml) fait jouer la stratégie
+  avant le match seulement (ordres annulés au coup d'envoi, aucun nouveau pari pendant le jeu). Il est à `false` : comme
+  dans l'ancien labo, où elle gagnait aussi pendant le match (+2,3 %), moins qu'avant (+10,2 %).
+- Mises en Kelly sur un biais supposé de 0,05 : grosses mises à prix élevé. Comme pour son fantôme : Kelly × santé
+  (`sante.py`) et une mise au plus 25 % du capital (`settings.yaml` → `principal.max_mise`).
 
-## 3. Ce qui a été gardé, retiré, changé
+## 3. Ce qui a été gardé, retiré, changé (export du 28/10 ; voir §6 pour la suite)
 - **Gardé tel quel** : noyau protégé (`PROTECTED_PATHS.txt` : journal signé, contrôleur, règle n°1, simulateur, frais,
   audit indépendant, réinitialisation, gardien des pull requests), cycle, scanner, arène (classement, confiance,
   verdicts, champion(s), parts du capital principal, renfort), santé des stratégies, récompenses de liquidité estimées,
@@ -73,7 +74,7 @@ Détail : `docs/EXPLOITATION.md`. Résumé :
 6. **Settings → Pages** : branche `gh-pages`, dossier `/` → tableau de bord à
    `https://r655rkz7bt-stack.github.io/polymarket-labo-favori-sport/`.
 7. Ruleset `protection-data` (pas de suppression ni de force push sur `data`), puis `protection-main` (`docs/VERROUILLAGE.md`).
-8. cron-job.org : nouveau jeton GitHub (fine-grained, ce seul dépôt, permission Actions) et tâche toutes les 5 minutes sur
+8. cron-job.org : nouveau jeton GitHub (fine-grained, ce seul dépôt, permission Actions) et tâche toutes les 5 minutes (comme l'ancien labo, = `cycle.bucket_minutes`) sur
    `…/repos/r655rkz7bt-stack/polymarket-labo-favori-sport/actions/workflows/cycle.yml/dispatches` ; le jeton ne passe jamais
    par la conversation.
 9. Facultatif : installer l'application GitHub de Claude sur ce dépôt pour qu'une session puisse y travailler.
@@ -84,8 +85,52 @@ Détail : `docs/EXPLOITATION.md`. Résumé :
   `git fetch origin claude/labo-favori-sport` et pousser ce commit sur `main` du nouveau dépôt
   (`git push <nouveau> FETCH_HEAD:refs/heads/main`). Une session Claude ne peut pas créer de dépôt GitHub (403) : Etienne le crée.
 - Commandes locales : `docs/METHODE.md` (installer, tests, `initialize.py --dev-key`, `run_simulation.py --once --dev-key`).
-- Idées de variantes à tester (chacune = une entrée de `config/strategies.yaml`, voir `docs/METHODE.md`) : la sœur « avant
-  le match » (déjà là) ; biais plus faible (0,03) pour des mises plus raisonnables ; plage de prix voisine (0,825-0,85,
-  0,875-0,90) comme témoin ; mise plate au lieu de Kelly ; par sport (tennis, football, e-sport) ; heures avant le match.
+- Idées de réglages à essayer (un à la fois, date notée au §6, voir `docs/METHODE.md`) : `annuler_au_coup_d_envoi: true`
+  (avant le match seulement) ; biais plus faible (0,03) pour des mises plus raisonnables ; mise plus petite
+  (`kelly_fraction`) ; par sport (tennis, football, e-sport) ; heures avant le match (`heures_min`, `heures_max`).
 - Règles permanentes : `CLAUDE.md` (règle n°1, interdits, noyau protégé, qui est Etienne : expliquer simplement en
   français, une étape à la fois, ne jamais demander un secret).
+
+## 6. Journal des changements (après l'export)
+- **29/10/2026, mise en service** : dépôt créé, secrets, `initialize` (après une `LEDGER_KEY` trop courte : 32 caractères
+  au moins), ruleset `protection-data`, premier cycle, GitHub Pages, cron-job.org **toutes les 2 minutes** (choix d'Etienne ;
+  `cycle.bucket_minutes: 2` en conséquence).
+- **29/10/2026, plus d'arène** (demande d'Etienne : « la stratégie va juste trader toujours sur le principal, vire tout ce qui
+  ne sert plus à rien ») :
+  - `nf_sport_patiente_prix_850_875` trade directement le capital principal ; la sœur « avant le match » est retirée
+    (son idée reste un réglage : `annuler_au_coup_d_envoi`, qui suffit désormais seul) ;
+  - mise : demi-Kelly (`kelly_fraction: 0.5`, la mise de base de son ancien fantôme tant que son avantage n'était pas
+    prouvé), au plus 25 % du capital par pari, 3 % toujours gardés disponibles ; plus de plafond par famille (tous ses
+    paris sont du sport) ; ordres posés gardés pendant le match, comme dans l'ancien labo ;
+  - retirés : arène, fantômes, `promotion.yaml`, copie du principal, santé et renfort des stratégies, récompenses estimées
+    (liquidité, détention), historique du classement, entonnoir, modules et tables morts (sources, IA, références) ;
+  - gardés : indices de confiance (nouveau `confiance.py`, mêmes formules que l'arène), sélection adverse (markout),
+    deux camps d'un même match, relecture du carnet, réserve, audit, tableau de bord (bloc « La stratégie » et ses courbes) ;
+  - les journaux des deux fantômes créés le 29/10 restent dans la branche `data` (`ledger/fantome/`) mais ne bougent
+    plus ; leurs ordres posés encore ouverts sont annulés au premier cycle ;
+  - vérifié : 258 tests verts, un cycle local réel (1 496 marchés lus, 150 surveillés), tableau de bord sans erreur sur
+    téléphone et ordinateur, courbes chargées depuis le journal de production.
+  - `CLAUDE.md` (protégé) parle encore de l'arène : proposition de texte dans `proposals/2026-10-29_claude_md_sans_arene.md`.
+- **29/10/2026, mêmes conditions que l'ancien fantôme, suite de son passé** (demande d'Etienne : « comme si c'était un
+  fantôme et que tu reprenais la suite juste après son passé dans l'autre labo ») :
+  - mise : Kelly entier × santé de la stratégie (`sante.py`, réglages `sante_strategies` de l'ancien labo : ½ tant que
+    20 prévisions ne sont pas jugées, 1 si prouvées meilleures que le prix, ¼ sinon ; renfort jusqu'à 2 ; suspension si
+    les frais mangent l'avantage) ; mise ≤ 25 % du capital ; plus de réserve de 3 % (le fantôme n'en avait pas) ;
+  - antécédents : son journal du labo d'origine est relu à chaque cycle (`antecedents.py`, chaîne de hash vérifiée) ;
+    ses 85 paris comptent dans la confiance et dans la mise. Sur ce passé : prudence 1 (85 prévisions jugées, avance
+    +0,0019), renfort 1 (confiance par jour 78 % < 80 %), donc Kelly × 1, comme à la fin de son journal ;
+  - capital : il reste à 1 000 € (décision d'Etienne) ; seuls les paris du fantôme comptent (confiance et mise) ;
+  - plus aucune règle propre au capital principal de l'ancien labo (mise ≤ 10 %, plafond par famille, réserve de 3 %,
+    copie, annulation au coup d'envoi) ;
+  - vérifié : 262 tests verts, cycle local réel (facteur de mise 1,0).
+- **29/10/2026, « comme le fantôme exactement »** (Etienne) :
+  - cycle toutes les 5 minutes, comme l'ancien labo (`cycle.bucket_minutes: 5`, cron-job.org réglé par Etienne) ;
+  - mêmes marchés vus : le scanner de l'ancien labo et ses réglages exacts (pages par étiquette, marchés longs, échus,
+    séries d'e-sport : ~4 900 marchés lus) ; puis les marchés de sport demandés par ses voisines de l'ancien labo
+    (`voisines.py`, code copié mot pour mot, `config/voisines.yaml` : 17 stratégies actives, sans leurs paris). Sur ses
+    86 marchés achetés, beaucoup d'e-sport et de tennis ITF peu échangés venaient de ces demandes. Vérifié : sur les
+    mêmes réponses de Polymarket, l'ancien code et celui-ci montrent au fantôme les mêmes 57 marchés de sport ;
+  - limites : les demandes qui dépendent de sources externes (calendrier NHL, Kalshi, PredictIt, Manifold, tweets) ne
+    sont pas reprises ; l'ancien labo continue d'évoluer : `config/voisines.yaml` est sa photo du 29/10/2026 ;
+  - vérifié : cycle local réel en 36 s (4 893 marchés, 33 marchés de sport demandés par les voisines, un ordre posé).
+

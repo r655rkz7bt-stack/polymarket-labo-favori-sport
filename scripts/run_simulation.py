@@ -16,9 +16,9 @@ import os
 import time
 from datetime import datetime, timezone
 
-from _common import ROOT, get_key, load_settings_with_arena as load_settings, resolve, setup_logging
+from _common import ROOT, get_key, load_settings, resolve, setup_logging
 
-from polymarket_agent import dashboard
+from polymarket_agent import antecedents, dashboard, voisines
 from polymarket_agent.http_client import HttpClient
 from polymarket_agent.main import CycleDeps, run_cycle
 from polymarket_agent.persistence import Database
@@ -45,7 +45,7 @@ def acquire_lock(path) -> bool:
 
 
 def maybe_build_dashboard(settings: dict, key: bytes, db, report) -> str:
-    """Régénère le tableau de bord toutes les 30 min. Un échec n'interrompt jamais le cycle."""
+    """Régénère le tableau de bord toutes les `dashboard.every_minutes`. Un échec n'interrompt jamais le cycle."""
     if report.exit_code == 2:  # journal corrompu ou absent : rien de fiable à afficher
         return "non généré (journal illisible)"
     cfg = settings["dashboard"]
@@ -80,11 +80,12 @@ def one_cycle(settings: dict, key: bytes) -> int:
                 strategies=load_strategies(ROOT / "config" / "strategies.yaml"),
                 ledger_path=resolve(ROOT, paths["ledger"]),
                 lock_path=resolve(ROOT, paths["bankruptcy_lock"]),
-                shadow_dir=resolve(ROOT, paths["shadow_dir"]),
                 key=key, db=db,
                 gamma=GammaClient(http, src["polymarket_gamma"]["base_url"]),
                 clob=ClobClient(http, src["polymarket_clob"]["base_url"],
                                 batch_size=src["polymarket_clob"]["books_batch_size"]),
+                history=antecedents.load(resolve(ROOT, paths["antecedents"]) if paths.get("antecedents") else None),
+                voisines=voisines.charger(ROOT / "config" / "voisines.yaml"),
             )
             report = run_cycle(deps)
             site = maybe_build_dashboard(settings, key, db, report)
@@ -92,8 +93,7 @@ def one_cycle(settings: dict, key: bytes) -> int:
             db.close()
         print(json.dumps({"cycle": report.cycle_id, "statut": report.status,
                           "compteurs": report.counts, "capital": report.summary,
-                          "fantomes": report.shadows, "sources": report.sources,
-                          "arene": report.arena.get("events", []), "paliers": report.milestones,
+                          "abstentions": report.abstentions, "paliers": report.milestones,
                           "tableau_de_bord": site, "messages": report.messages},
                          ensure_ascii=False, indent=2))
         return report.exit_code

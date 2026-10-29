@@ -1,4 +1,6 @@
-"""Cycle complet avec des API factices : flux de bout en bout et scénarios de panne."""
+"""Cycle complet avec des API factices : flux de bout en bout et scénarios de panne.
+
+Depuis le 29/10/2026 (plus d'arène), la stratégie trade directement le capital principal."""
 
 from __future__ import annotations
 
@@ -7,7 +9,6 @@ from datetime import timedelta
 from decimal import Decimal
 
 import pytest
-import yaml
 
 from conftest import KEY, NOW, ROOT, buy, make_book, raw_market
 from polymarket_agent.config import load_settings
@@ -15,24 +16,17 @@ from polymarket_agent.http_client import SourceUnavailable
 from polymarket_agent.ledger import Ledger
 from polymarket_agent.main import EXIT_HALT, CycleDeps, run_cycle
 from polymarket_agent.persistence import Database
-from polymarket_agent.safety_controller import RealModeForbidden
+from polymarket_agent.safety_controller import Proposal, RealModeForbidden
 from polymarket_agent.strategy_engine import NaiveFavorite, PatientOrders, load_strategies
 
-
-def crown(paths, name="naive_favorite_v1.0.0"):
-    """Désigne la stratégie de test comme champion : le capital principal suit ses décisions."""
-    Ledger.open(paths[0], KEY, paths[1]).record_promotion(name, "test", now=NOW)
+D = Decimal
 
 
-def pipeline_strategy(mode="principal"):
-    """Stratégie de test du pipeline (la référence naïve, qui trade facilement)."""
-    s = NaiveFavorite("1.0.0", "2026-10-14", {
+def pipeline_strategy():
+    """Stratégie de test du pipeline (le favori naïf à Kelly entier, qui trade facilement)."""
+    return NaiveFavorite("1.0.0", "2026-10-14", {
         "min_ask": D("0.80"), "max_ask": D("0.95"), "bias": D("0.05"), "uncertainty": D("0.015"),
         "min_net_edge": D("0.02"), "max_extra_ticks": D("2"), "max_proposals_per_cycle": D("3")})
-    s.mode = mode
-    return s
-
-D = Decimal
 
 
 class FakeGamma:
@@ -66,9 +60,6 @@ class FakeClob:
     def get_book(self, token_id):
         return (self.fresh or self.books)[token_id]
 
-    def get_price_history(self, token_id, start_ts, end_ts, fidelity=60):
-        return []
-
 
 @pytest.fixture
 def env(tmp_path, ledger, paths, limits):
@@ -77,19 +68,10 @@ def env(tmp_path, ledger, paths, limits):
     clock = {"now": NOW}
 
     def make(gamma, clob, settings=None, strategies=None):
-        if settings is None:
-            settings = load_settings()
-            settings["arena"] = yaml.safe_load((ROOT / "config" / "promotion.yaml").read_text(encoding="utf-8"))
-            # Le champion de test engage toute sa part (sans période d'essai, garde-fou par jour, mise
-            # sur l'avantage mesuré ni plafond) : le principal copie alors les paris du fantôme à l'identique (18/10/2026).
-            settings["arena"].update(essai={}, part_max_par_strategie=None, garde_fou_jour=None,
-                                     mise_avantage_mesure=None)
-            settings["fantomes"] = {}  # mise des fantômes non plafonnée : tests/test_deux_camps.py
-        return CycleDeps(settings=settings, limits=limits,
+        return CycleDeps(settings=settings if settings is not None else load_settings(), limits=limits,
                          strategies=strategies if strategies is not None else [pipeline_strategy()],
                          ledger_path=paths[0], lock_path=paths[1], key=KEY, db=db,
-                         gamma=gamma, clob=clob, now=lambda: clock["now"],
-                         shadow_dir=tmp_path / "fantome")
+                         gamma=gamma, clob=clob, now=lambda: clock["now"])
     yield make, db, clock
     db.close()
 
@@ -98,9 +80,12 @@ def good_book(token="tokA", ts=NOW):
     return make_book(token, bids=(("0.89", "500"),), asks=(("0.90", "40"), ("0.91", "500")), ts=ts)
 
 
+def _ledger_types(path):
+    return [json.loads(l)["type"] for l in path.read_text().splitlines()]
+
+
 def test_full_cycle_executes_and_books_a_simulated_trade(env, paths):
     make, db, _ = env
-    crown(paths)
     report = run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": good_book()})))
     assert report.status == "OK", report.messages
     assert report.counts["fills"] == 1
@@ -111,8 +96,7 @@ def test_full_cycle_executes_and_books_a_simulated_trade(env, paths):
     assert pos.shares == D("10")
     assert reopened.state.fees_paid > 0
     assert reopened.state.cash + pos.cost_basis == D("1000")
-    types = [json.loads(l)["type"] for l in paths[0].read_text().splitlines()]
-    assert types == ["GENESIS", "PROMOTION", "BUY", "HEARTBEAT"]
+    assert _ledger_types(paths[0]) == ["GENESIS", "BUY", "HEARTBEAT"]
     row = db.conn.execute("SELECT accepted, fill_status FROM decisions").fetchone()
     assert row["accepted"] == 1 and row["fill_status"] == "PARTIAL"
     assert db.get_anchor()[0] == reopened.state.last_seq
@@ -120,7 +104,6 @@ def test_full_cycle_executes_and_books_a_simulated_trade(env, paths):
 
 def test_rerun_in_same_bucket_does_not_double_book(env, paths):
     make, _, clock = env
-    crown(paths)
     deps = make(FakeGamma([raw_market()]), FakeClob({"tokA": good_book()}))
     run_cycle(deps)
     cash = Ledger.open(paths[0], KEY, paths[1]).state.cash
@@ -129,9 +112,24 @@ def test_rerun_in_same_bucket_does_not_double_book(env, paths):
     assert Ledger.open(paths[0], KEY, paths[1]).state.cash == cash
 
 
+def _full_kelly():
+    """Réglages du dépôt, mise entière (prudence 1) : comme une stratégie déjà prouvée."""
+    settings = load_settings()
+    settings["sante_strategies"] = dict(settings["sante_strategies"], base=1.0)
+    return settings
+
+
+def test_each_bet_is_capped_at_a_quarter_of_the_capital(env, paths):
+    """`principal.max_mise` (0,25) : Kelly entier sur un biais fixe de +0,05 voudrait bien plus."""
+    make, _, _ = env
+    deep = make_book("tokA", bids=(("0.89", "5000"),), asks=(("0.90", "100000"),))
+    run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": deep}), _full_kelly()))
+    pos = Ledger.open(paths[0], KEY, paths[1]).state.positions["tokA"]
+    assert D("240") <= pos.cost_basis <= D("251")
+
+
 def test_unavailable_source_does_not_block_the_program(env, paths):
     make, _, clock = env
-    crown(paths)
     report = run_cycle(make(FakeGamma(fail=True), FakeClob({})))
     assert report.status == "DEGRADE" and report.exit_code == 0
     report = run_cycle(make(FakeGamma([raw_market()]), FakeClob({}, fail=True)))
@@ -143,8 +141,7 @@ def test_unavailable_source_does_not_block_the_program(env, paths):
 
 
 def test_book_changed_before_execution_is_rechecked(env, paths):
-    make, db, _ = env
-    crown(paths)
+    make, _, _ = env
     moved = make_book("tokA", bids=(("0.93", "500"),), asks=(("0.97", "500"),))
     report = run_cycle(make(FakeGamma([raw_market()]),
                             FakeClob({"tokA": good_book()}, fresh={"tokA": moved})))
@@ -157,7 +154,6 @@ def test_price_crash_during_the_cycle_postpones_the_buy(env, paths):
     prix effondré à la relecture (0,80) ; acheter « l'aubaine » avec une mise calculée sur
     l'ancien prix revenait à acheter une mauvaise nouvelle. On reporte au cycle suivant."""
     make, db, _ = env
-    crown(paths)
     crashed = make_book("tokA", bids=(("0.79", "500"),), asks=(("0.80", "500"),))
     report = run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": good_book()}, fresh={"tokA": crashed})))
     assert report.counts.get("fills", 0) == 0
@@ -167,17 +163,15 @@ def test_price_crash_during_the_cycle_postpones_the_buy(env, paths):
 
 def test_a_one_cent_dip_during_the_cycle_still_trades(env, paths):
     make, _, _ = env
-    crown(paths)
     dip = make_book("tokA", bids=(("0.88", "500"),), asks=(("0.89", "40"), ("0.90", "500")))
     report = run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": good_book()}, fresh={"tokA": dip})))
     assert report.counts["fills"] == 1
 
 
-def test_book_aged_by_earlier_portfolios_is_reread_not_rejected(env, paths):
-    """21/10/2026 : un cycle de plusieurs minutes vieillit les carnets du début de cycle ; les portefeuilles passés en dernier
-    voyaient leurs propositions rejetées « carnet périmé » avant même la relecture. Le carnet relu, frais, doit suffire."""
+def test_book_aged_during_the_cycle_is_reread_not_rejected(env, paths):
+    """21/10/2026 : un cycle long vieillit les carnets du début de cycle ; une proposition n'est pas rejetée
+    « carnet périmé » avant même la relecture. Le carnet relu, frais, doit suffire."""
     make, _, _ = env
-    crown(paths)
     old = good_book(ts=NOW - timedelta(minutes=4))
     report = run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": old}, fresh={"tokA": good_book()})))
     assert report.counts["fills"] == 1
@@ -185,7 +179,6 @@ def test_book_aged_by_earlier_portfolios_is_reread_not_rejected(env, paths):
 
 def test_stale_book_on_reread_means_no_trade(env, paths):
     make, _, _ = env
-    crown(paths)
     stale = good_book(ts=NOW - timedelta(minutes=10))
     report = run_cycle(make(FakeGamma([raw_market()]),
                             FakeClob({"tokA": good_book()}, fresh={"tokA": stale})))
@@ -237,7 +230,6 @@ def test_truncated_ledger_is_detected_by_anchor(env, ledger, paths):
 def test_real_mode_is_refused(env):
     make, _, _ = env
     settings = load_settings()
-    settings["arena"] = yaml.safe_load((ROOT / "config" / "promotion.yaml").read_text(encoding="utf-8"))
     settings["mode"] = "real"
     with pytest.raises(RealModeForbidden):
         run_cycle(make(FakeGamma(), FakeClob({}), settings))
@@ -245,7 +237,6 @@ def test_real_mode_is_refused(env):
 
 def test_cycle_settles_resolved_position_before_trading(env, paths):
     make, _, clock = env
-    crown(paths)
     gamma = FakeGamma([raw_market()])
     run_cycle(make(gamma, FakeClob({"tokA": good_book()})))
     pos = Ledger.open(paths[0], KEY, paths[1]).state.positions["tokA"]
@@ -261,57 +252,11 @@ def test_cycle_settles_resolved_position_before_trading(env, paths):
     assert state.realized_pnl == pos.shares - pos.cost_basis
 
 
-def test_shadow_portfolio_never_touches_main_capital(env, paths, tmp_path):
-    make, _, _ = env
-    report = run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": good_book()}),
-                            strategies=[pipeline_strategy("fantome")]))
-    assert report.status == "OK", report.messages
-    main = Ledger.open(paths[0], KEY, paths[1]).state
-    assert main.cash == D("1000") and not main.positions
-    shadow_path = tmp_path / "fantome" / "naive_favorite_v1.0.0.jsonl"
-    shadow = Ledger.open(shadow_path, KEY, tmp_path / "fantome" / "x.lock").state
-    assert "tokA" in shadow.positions
-    assert report.shadows["fantome:naive_favorite_v1.0.0"]["fills"] == 1
-
-
-def test_corrupt_shadow_is_ignored_main_continues(env, paths, tmp_path):
-    make, _, _ = env
-    (tmp_path / "fantome").mkdir()
-    (tmp_path / "fantome" / "naive_favorite_v1.0.0.jsonl").write_text("n'importe quoi\n")
-    report = run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": good_book()}),
-                            strategies=[pipeline_strategy("fantome")]))
-    assert report.status == "OK"
-    assert any("fantôme" in m for m in report.messages)
-
-
-def test_without_champion_main_capital_does_nothing(env, paths, tmp_path):
-    """Aucune stratégie éligible (trop peu d'opérations clôturées) : le principal ne trade pas,
-    mais chaque stratégie trade dans son fantôme."""
-    make, _, _ = env
-    report = run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": good_book()})))
-    assert report.status == "OK"
-    assert not Ledger.open(paths[0], KEY, paths[1]).state.positions
-    assert report.shadows["fantome:naive_favorite_v1.0.0"]["fills"] == 1
-    assert report.arena["champion"] == ""
-
-
-def test_main_follows_the_champion_with_distinct_op_ids(env, paths, tmp_path):
-    make, _, _ = env
-    crown(paths)
-    run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": good_book()})))
-    main = Ledger.open(paths[0], KEY, paths[1]).state
-    shadow = Ledger.open(tmp_path / "fantome" / "naive_favorite_v1.0.0.jsonl", KEY,
-                         tmp_path / "fantome" / "x.lock").state
-    assert "tokA" in main.positions and "tokA" in shadow.positions
-    assert not (main.op_ids & shadow.op_ids)
-
-
 def test_milestone_is_recorded_in_the_cycle(env, paths):
     make, _, clock = env
-    crown(paths)
     gamma = FakeGamma([raw_market()])
     run_cycle(make(gamma, FakeClob({"tokA": good_book()})))
-    # Le marché se résout à 1 : une énorme position gagnante ferait franchir 1 500…
+    # Une énorme position gagnante fait franchir 1 500…
     ledger = Ledger.open(paths[0], KEY, paths[1])
     ledger.record_buy(op_id="big", token_id="tokZ", market_id="mZ", event_id="eZ", outcome="Yes",
                       shares="1500", price="0.5", fee="0", strategy_id="t", strategy_version="0", now=NOW)
@@ -323,26 +268,19 @@ def test_milestone_is_recorded_in_the_cycle(env, paths):
     assert state.next_target == D("2250")
 
 
-def test_repository_config_competitors():
+def test_repository_config_is_the_single_strategy_with_its_ghost_conditions():
+    """29/10/2026 (Etienne) : « les mêmes conditions que sur l'ancien fantôme » : Kelly entier × santé (½ tant que rien
+    n'est prouvé, renfort jusqu'à 2), mise ≤ 25 % du capital, pas de réserve, ordres posés gardés en match, antécédents."""
     loaded = load_strategies(ROOT / "config" / "strategies.yaml")
-    assert [s.strategy_id for s in loaded] == ["nf_sport_patiente_prix_850_875", "nf_sport_patiente_prix_850_875_avant_match"]  # laboratoire dédié
-
-
-def test_collector_crash_never_stops_the_cycle(env, paths):
-    """Mode dégradé : même une panne totale de la collecte laisse le cycle trader."""
-    make, _, _ = env
-    deps = make(FakeGamma([raw_market()]), FakeClob({"tokA": good_book()}))
-
-    def broken(markets, now):
-        raise RuntimeError("toutes les sources en panne")
-    deps.collector = broken
-    report = run_cycle(deps)
-    assert report.status == "OK"
-    assert report.sources["collecte"].startswith("indisponible")
-    assert report.shadows["fantome:naive_favorite_v1.0.0"]["fills"] == 1
-    # L'état des sources est conservé dans le résumé du cycle (affiché par le tableau de bord).
-    summary = json.loads(deps.db.conn.execute("SELECT summary FROM cycles").fetchone()[0])
-    assert summary["sources"]["collecte"].startswith("indisponible")
+    assert [s.strategy_id for s in loaded] == ["nf_sport_patiente_prix_850_875"]  # laboratoire dédié
+    assert loaded[0].params["kelly_fraction"] == D("1.0")
+    assert loaded[0].annuler_au_coup_d_envoi is False  # comme dans l'ancien labo (ses 85 positions mesurées)
+    settings = load_settings()
+    assert settings["principal"] == {"max_mise": 0.25}  # aucune règle du principal de l'ancien labo
+    assert settings["sante_strategies"] == {"min_resolved": 20, "base": 0.5, "proven": 1.0, "disproven": 0.25,
+                                            "suspension_min_closed": 20,
+                                            "renfort": {"min_operations": 30, "confiance_jour_min": 0.8, "paris_fictifs": 30, "max": 2.0}}
+    assert (ROOT / settings["paths"]["antecedents"]).exists()
 
 
 def test_crash_mid_cycle_then_clean_resume(env, paths):
@@ -358,34 +296,7 @@ def test_crash_mid_cycle_then_clean_resume(env, paths):
     assert before.cash == D("1000") and not before.positions
     clock["now"] = NOW + timedelta(minutes=5)
     report = run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": good_book(ts=clock["now"])})))
-    assert report.status == "OK"
-    assert report.shadows["fantome:naive_favorite_v1.0.0"]["fills"] == 1
-
-
-def test_price_history_is_cached_and_budgeted(tmp_path):
-    """150 marchés suivis : l'historique de prix est gardé 20 min et relu au plus 40 fois par cycle."""
-    from types import SimpleNamespace
-    from polymarket_agent import main as cycle
-    from polymarket_agent.market_scanner import parse_market
-
-    calls = []
-
-    class Clob:
-        def get_price_history(self, token_id, start_ts, end_ts, fidelity=60):
-            calls.append(token_id)
-            return [(end_ts - 7 * 3600, 0.4), (end_ts - 2 * 3600, 0.5), (end_ts - 60, 0.55)]
-    db = Database(tmp_path / "db.sqlite")
-    markets = [parse_market(raw_market(market_id=str(i), yes_token=f"y{i}", no_token=f"n{i}")) for i in range(60)]
-    deps = SimpleNamespace(db=db, clob=Clob())
-    cycle._attach_price_features(deps, markets, NOW)
-    assert len(calls) == cycle.PRICE_FEATURES_PER_CYCLE
-    assert markets[0].yes_price_6h_ago == 0.4 and markets[0].yes_price_1h_ago == 0.5
-    calls.clear()
-    fresh = [parse_market(raw_market(market_id=str(i), yes_token=f"y{i}", no_token=f"n{i}")) for i in range(60)]
-    cycle._attach_price_features(deps, fresh, NOW + timedelta(minutes=5))
-    assert len(calls) == 20  # seuls les 20 marchés jamais lus ; les autres viennent du cache
-    assert all(m.yes_price_6h_ago == 0.4 for m in fresh)
-    db.close()
+    assert report.status == "OK" and report.counts["fills"] == 1
 
 
 # --------------------------------------------------------------------------- ordres posés
@@ -393,25 +304,18 @@ def test_price_history_is_cached_and_budgeted(tmp_path):
 def _patient(max_proposals="3"):
     inner = pipeline_strategy()
     inner.params["max_proposals_per_cycle"] = D(max_proposals)
-    s = PatientOrders(inner, 1)
-    s.mode = "principal"
-    return s
+    return PatientOrders(inner, 1)
 
 
-def _ledger_types(path):
-    return [json.loads(l)["type"] for l in path.read_text().splitlines()]
-
-
-def test_resting_order_is_placed_then_filled_only_when_traded_through(env, paths, tmp_path):
+def test_resting_order_is_placed_then_filled_only_when_traded_through(env, paths):
     make, db, clock = env
-    crown(paths)
     # Cycle 1 : écart 0,89 / 0,90 → achat posé à 0,89 (1 cran au-dessus de l'acheteur, sous le vendeur).
     report = run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": good_book()}), strategies=[_patient()]))
     assert report.status == "OK", report.messages
     assert "BUY" not in _ledger_types(paths[0])  # rien n'est exécuté au moment de la pose
     orders = db.open_orders()
-    assert len(orders) == 2 and {o["portfolio"] for o in orders} == {"principal", "fantome:naive_favorite_v1.0.0"}
-    assert all(json.loads(o["proposal"])["max_price"] == "0.89" for o in orders)
+    assert len(orders) == 1 and orders[0]["portfolio"] == "principal"
+    assert json.loads(orders[0]["proposal"])["max_price"] == "0.89"
 
     # Cycle 2 : le meilleur vendeur touche 0,89 → pas d'exécution (file d'attente inconnue).
     clock["now"] = NOW + timedelta(minutes=5)
@@ -421,7 +325,7 @@ def test_resting_order_is_placed_then_filled_only_when_traded_through(env, paths
 
     # La stratégie a remis son prix à jour (0,88 / 0,89 → achat posé à 0,88) : l'ancien ordre est remplacé.
     assert {json.loads(o["proposal"])["max_price"] for o in db.open_orders()} == {"0.88"}
-    assert db.conn.execute("SELECT COUNT(*) FROM pending_orders WHERE status='REMPLACE'").fetchone()[0] == 2
+    assert db.conn.execute("SELECT COUNT(*) FROM pending_orders WHERE status='REMPLACE'").fetchone()[0] == 1
 
     # Cycle 3 : des vendeurs à 0,87 → le marché est passé au travers : 30 parts au prix posé 0,88.
     clock["now"] = NOW + timedelta(minutes=10)
@@ -437,197 +341,62 @@ def test_resting_order_is_placed_then_filled_only_when_traded_through(env, paths
     assert buys[0]["data"]["extra"]["order_type"] == "limite"
 
 
-def test_principal_drops_its_resting_copy_when_the_ghost_replaces_it_and_the_copy_is_not_placed(env, paths):
-    """Enquête du 26/10/2026 : le fantôme remet son prix à jour (0,83 → 0,82) mais la copie du principal est
-    écartée (mise plafonnée) : l'ancien ordre du principal à 0,83 restait ouvert et était servi à un prix que
-    le fantôme n'acceptait plus (« Team Yandex », 22:35, achat sans jumeau)."""
-    make, db, clock = env
-    crown(paths)
-    run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": good_book()}), strategies=[_patient()]))
-    old = {o["portfolio"]: json.loads(o["proposal"])["max_price"] for o in db.open_orders()}
-    assert old["principal"] == "0.89"
-    # Cycle 2 : le fantôme re-pose à 0,88 ; le plafond du principal écarte la copie.
-    clock["now"] = NOW + timedelta(minutes=5)
-    settings = load_settings()
-    settings["arena"] = yaml.safe_load((ROOT / "config" / "promotion.yaml").read_text(encoding="utf-8"))
-    settings["arena"].update(essai={}, part_max_par_strategie=None, garde_fou_jour=None, mise_avantage_mesure=None)
-    settings["fantomes"] = {}
-    settings["principal"] = {"max_mise": 0, "max_famille": 0}
-    touch = make_book("tokA", bids=(("0.88", "500"),), asks=(("0.89", "500"),), ts=clock["now"])
-    run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": touch}), settings, [_patient()]))
-    now_open = {o["portfolio"]: json.loads(o["proposal"])["max_price"] for o in db.open_orders()}
-    assert now_open == {"fantome:naive_favorite_v1.0.0": "0.88"}  # plus d'ordre périmé au principal
-    # Cycle 3 : le marché passe au travers de l'ancien prix du principal : rien n'est acheté pour lui.
-    clock["now"] = NOW + timedelta(minutes=10)
-    through = make_book("tokA", bids=(("0.86", "500"),), asks=(("0.87", "500"),), ts=clock["now"])
-    run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": through}), settings, [_patient()]))
-    assert "BUY" not in _ledger_types(paths[0])
-
-
 def test_resting_order_expires_and_never_fills_after(env, paths):
     make, db, clock = env
-    crown(paths)
     settings = load_settings()
-    settings["arena"] = yaml.safe_load((ROOT / "config" / "promotion.yaml").read_text(encoding="utf-8"))
-    settings["arena"]["mise_avantage_mesure"] = None  # champion de test sans pari : copie entière
     settings["limit_orders"] = {"max_age_hours": 0.05, "max_open_per_portfolio": 30}  # 3 minutes
     run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": good_book()}), settings, [_patient()]))
-    assert len(db.open_orders()) == 2
+    assert len(db.open_orders()) == 1
     clock["now"] = NOW + timedelta(minutes=5)
     through = make_book("tokA", bids=(("0.70", "500"),), asks=(("0.71", "500"),), ts=clock["now"])
     run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": through}), settings, [pipeline_strategy()]))
-    assert "BUY" not in [t for t in _ledger_types(paths[0])]
+    assert "BUY" not in _ledger_types(paths[0])
     statuses = {r["status"] for r in db.conn.execute("SELECT status FROM pending_orders")}
     assert statuses == {"EXPIRE"}
 
 
-def test_resting_buys_cannot_reserve_more_than_the_cash(env, paths, tmp_path):
+def test_resting_buys_cannot_reserve_more_than_the_cash(env, paths):
     make, db, _ = env
-    crown(paths)
     markets = [raw_market(str(i), yes_token=f"y{i}", no_token=f"n{i}", event_id=f"e{i}") for i in range(6)]
     books = {f"y{i}": good_book(f"y{i}") for i in range(6)}
-    settings = load_settings()
-    settings["arena"] = yaml.safe_load((ROOT / "config" / "promotion.yaml").read_text(encoding="utf-8"))
-    settings["arena"]["mise_avantage_mesure"] = None  # champion de test sans pari : copie entière
-    settings["sante_strategies"] = {"base": 1.0}  # mise entière : la réservation doit refuser un ordre
-    settings["fantomes"] = {}  # mise non plafonnée : c'est la réservation de l'argent qui est testée
-    run_cycle(make(FakeGamma(markets), FakeClob(books), settings, [_patient("6")]))
-    for name in ("principal", "fantome:naive_favorite_v1.0.0"):
-        reserved = sum(D(o["remaining"]) * D(json.loads(o["proposal"])["max_price"])
-                       for o in db.open_orders(name))
-        assert 0 < reserved <= D("1000")
+    run_cycle(make(FakeGamma(markets), FakeClob(books), _full_kelly(), strategies=[_patient("6")]))
+    reserved = sum(D(o["remaining"]) * D(json.loads(o["proposal"])["max_price"]) for o in db.open_orders("principal"))
+    assert 0 < reserved <= D("1000")
     reasons = [r[0] for r in db.conn.execute("SELECT reasons FROM decisions WHERE accepted = 0")]
-    assert any("réservé" in r for r in reasons)  # Kelly complet : le 2e ordre ne tient plus dans le solde
+    assert any("réservé" in r for r in reasons)  # mises de 25 % : le 5e ordre ne tient plus dans le solde
 
 
-
-
-def test_each_shadow_is_an_independent_scenario_for_liquidity(env, paths, tmp_path):
-    """Chaque fantôme répond à « et si cette stratégie tradait seule » : il ne perd pas la liquidité
-    prise par le principal (sinon l'arène pénaliserait la stratégie servie en dernier)."""
-    make, _, _ = env
-    crown(paths)
+def test_resting_orders_left_by_the_old_ghost_portfolios_are_cancelled(env, paths):
+    """29/10/2026 : plus de fantômes. Leurs ordres posés encore ouverts dans la base sont annulés au premier cycle
+    (sinon ils resteraient « ouverts » pour toujours dans la base et le tableau de bord)."""
+    make, db, _ = env
+    ghost = Proposal(op_id="vieux", side="BUY", market_id="1", event_id="ev1", token_id="tokA", outcome="Yes",
+                     est_probability=D("0.9"), prob_low=D("0.88"), prob_high=D("0.92"), max_price=D("0.85"),
+                     shares=D("10"), net_edge=D("0.03"), sources=("t",), uncertainty="t", invalidation="t",
+                     horizon_hours=D("5"), strategy_id="nf", strategy_version="1")
+    db.add_pending_order("fantome:nf_v1", ghost, NOW, NOW + timedelta(hours=5))
     run_cycle(make(FakeGamma([raw_market()]), FakeClob({"tokA": good_book()})))
-    main = Ledger.open(paths[0], KEY, paths[1]).state
-    shadow = Ledger.open(tmp_path / "fantome" / "naive_favorite_v1.0.0.jsonl", KEY, tmp_path / "fantome" / "x.lock").state
-    assert main.positions["tokA"].shares == shadow.positions["tokA"].shares == D("10")  # 25 % des 40 parts
+    assert db.conn.execute("SELECT status FROM pending_orders WHERE op_id='vieux'").fetchone()[0] == "ANNULE"
 
 
 def test_orders_of_the_same_portfolio_share_the_book_in_a_cycle(env, paths, tmp_path):
-    """Deux stratégies d'un même portefeuille sur le même jeton, au même cycle : la seconde ne
-    retrouve pas la liquidité déjà prise par la première."""
+    """Deux stratégies sur le même jeton, au même cycle : la seconde ne retrouve pas la liquidité déjà prise
+    par la première (et ne rachète pas le même jeton)."""
     from polymarket_agent.main import CycleReport, Portfolio, _execute
-    from polymarket_agent.models import MarketInfo  # noqa: F401
     from polymarket_agent.sources.polymarket_gamma import parse_market
     make, _, _ = env
     first, second = pipeline_strategy(), pipeline_strategy()
     second.strategy_id = "naive_bis"
     deps = make(FakeGamma([raw_market()]), FakeClob({"tokA": good_book()}), strategies=[first, second])
     ledger = Ledger.create(tmp_path / "p.jsonl", KEY, tmp_path / "p.lock", "1000", now=NOW)
-    portfolio = Portfolio("fantome:test", ledger, [first, second])
+    portfolio = Portfolio("principal", ledger, [first, second])
     market = parse_market(raw_market())
     _execute(deps, portfolio, [market], {"tokA": good_book()}, CycleReport("c1"), "b1", [market])
     assert ledger.state.positions["tokA"].shares == D("10")  # 10 au total (25 % de 40), pas 20
 
 
-
-def test_strategy_health_halves_bets_until_proven_and_suspends_fee_burners(env, paths, tmp_path):
-    """Mise prudente (½ Kelly tant qu'aucune prévision n'est jugée) et suspension d'une stratégie
-    qui ne gagne pas ses frais : elle n'ouvre plus rien, ses sorties continuent."""
-    from polymarket_agent import strategy_health
-    make, db, clock = env
-    deep = {"tokA": make_book("tokA", bids=(("0.89", "5000"),), asks=(("0.90", "100000"),))}
-    full = load_settings()
-    full["arena"] = yaml.safe_load((ROOT / "config" / "promotion.yaml").read_text(encoding="utf-8"))
-    full["sante_strategies"] = {"base": 1.0}
-    full["fantomes"] = {}  # mise non plafonnée : on compare ½ Kelly à Kelly complet
-    run_cycle(make(FakeGamma([raw_market()]), FakeClob(deep), full))
-    shadow_path = tmp_path / "fantome" / "naive_favorite_v1.0.0.jsonl"
-    whole = Ledger.open(shadow_path, KEY, tmp_path / "x.lock").state.positions["tokA"].shares
-    shadow_path.unlink()
-    for f in (tmp_path / "fantome").glob("*"):
-        f.unlink()
-    run_cycle(make(FakeGamma([raw_market()]), FakeClob(deep)))  # réglage du dépôt : ½ Kelly au départ
-    half = Ledger.open(shadow_path, KEY, tmp_path / "x.lock").state.positions["tokA"].shares
-    assert abs(half - whole / 2) <= D("0.02")
-    health = strategy_health.load(db, "naive_favorite_v1.0.0")
-    assert health["prudence"] == 0.5 and health["jugees"] == 0 and health["suspendue"] is None
-
-
-def test_forecast_score_beats_or_trails_the_market(tmp_path):
-    from polymarket_agent import strategy_health
-    db = Database(tmp_path / "db.sqlite")
-    items = [{"token_id": f"t{i}", "market_id": f"m{i}", "p": 0.9, "price": 0.6, "ts": "x"} for i in range(4)]
-    markets = {f"m{i}": raw_market(f"m{i}", f"t{i}", f"n{i}", closed=True,
-                                   outcomePrices=json.dumps(["1", "0"] if i < 3 else ["0", "1"])) for i in range(4)}
-    assert strategy_health.update_outcomes(db, markets.__getitem__, items, NOW) == 4
-    s = strategy_health.score(db, items)
-    assert s["jugees"] == 4 and s["brier"] == round((3 * 0.01 + 0.81) / 4, 4)
-    assert s["avance"] == round(((3 * 0.16 + 0.36) - (3 * 0.01 + 0.81)) / 4, 4)  # 3 bons paris sur 4 à 0,9
-    cfg = strategy_health.config({"sante_strategies": {"min_resolved": 4}})
-    assert strategy_health.prudence(s, cfg) == (1.0 if s["avance"] > 0 else 0.25)
-    assert strategy_health.prudence(dict(s, jugees=1), cfg) == 0.5
-    db.close()
-
-
-def test_fee_burner_is_suspended_only_after_enough_trades():
-    from types import SimpleNamespace
-    from polymarket_agent import strategy_health
-    cfg = strategy_health.config({})
-    burner = SimpleNamespace(realized_pnl=D("-40"), fees_paid=D("60"))   # brut +20, frais 60
-    honest_loser = SimpleNamespace(realized_pnl=D("-40"), fees_paid=D("5"))  # brut −35 : perd avant frais
-    winner = SimpleNamespace(realized_pnl=D("30"), fees_paid=D("60"))
-    assert strategy_health.suspension(burner, 25, cfg) and not strategy_health.suspension(burner, 5, cfg)
-    assert strategy_health.suspension(honest_loser, 25, cfg) is None  # l'élimination hebdomadaire s'en charge
-    assert strategy_health.suspension(winner, 25, cfg) is None
-
-
-def test_principal_never_buys_the_same_market_twice_for_two_strategies(env, paths):
-    """Plusieurs stratégies au principal (18/10/2026) : si deux d'entre elles veulent le même marché
-    dans le même cycle, seule la première l'achète."""
-    from polymarket_agent.main import CycleReport, Portfolio, Weighted, _execute
-    from polymarket_agent.sources.polymarket_gamma import parse_market
-    make, _, _ = env
-    deep = make_book("tokA", bids=(("0.89", "5000"),), asks=(("0.90", "5000"),))  # assez pour les deux
-    deps = make(FakeGamma([raw_market()]), FakeClob({"tokA": deep}))
-    twin = pipeline_strategy()
-    twin.strategy_id = "nf_jumelle"
-    main = Portfolio("principal", Ledger.open(paths[0], KEY, paths[1]),
-                     [Weighted(pipeline_strategy(), D("0.5")), Weighted(twin, D("0.5"))])
-    _execute(deps, main, [parse_market(raw_market())], {"tokA": deep}, CycleReport(cycle_id="c1"), "b1")
-    buys = [json.loads(l)["data"] for l in paths[0].read_text().splitlines() if json.loads(l)["type"] == "BUY"]
-    assert [b["strategy_id"] for b in buys] == ["naive_favorite"]
-
-
-def test_principal_keeps_a_cash_reserve_so_no_bet_can_empty_it(env, tmp_path):
-    """27/10/2026 (« plus de liberté… regarde l'objectif plutôt que la mort prochaine ») : la faillite tombe à 0 € DISPONIBLE,
-    même avec des positions qui valent quelque chose. Le principal peut miser plus gros, mais un achat ne laisse jamais moins
-    de `principal.reserve_liquidites` du capital estimé : réduit à ce qui reste au-dessus, sinon abandonné."""
-    from polymarket_agent.main import CycleReport, Portfolio, Weighted, _execute
-    from polymarket_agent.sources.polymarket_gamma import parse_market
-    make, _, _ = env
-    deep = make_book("tokA", bids=(("0.89", "5000"),), asks=(("0.90", "5000"),))
-
-    def cash_after(reserve, folder):
-        settings = load_settings()
-        settings["principal"] = dict(settings["principal"], reserve_liquidites=reserve)
-        deps = make(FakeGamma([raw_market()]), FakeClob({"tokA": deep}), settings=settings)
-        folder.mkdir()
-        ledger = Ledger.create(folder / "l.jsonl", KEY, folder / "l.lock", "1000", now=NOW)
-        ledger.record_buy(op_id="avant", token_id="autre", market_id="m-autre", event_id="e-autre", outcome="Yes",
-                          shares="1700", price="0.55", fee="0", strategy_id="s", strategy_version="1", now=NOW)  # 65 € disponibles
-        main = Portfolio("principal", ledger, [Weighted(pipeline_strategy(), D("1"))])
-        _execute(deps, main, [parse_market(raw_market())], {"tokA": deep}, CycleReport(cycle_id="c1"), "b1")
-        assert "tokA" in ledger.state.positions  # l'achat a bien lieu dans les deux cas
-        return ledger.state.cash
-
-    assert cash_after(None, tmp_path / "sans") < D("1")  # sans réserve : le pari vide presque tout le disponible
-    assert D("30") <= cash_after(0.03, tmp_path / "avec") < D("31")  # 3 % de 1 000 € restent disponibles
-
-
-def test_a_book_reread_by_one_portfolio_is_reused_by_the_next_within_seconds(env):
-    """19/10/2026 : plusieurs fantômes visent le même marché ; un carnet relu il y a moins de
-    20 s dans le même cycle n'est pas relu une deuxième fois."""
+def test_a_book_reread_is_reused_within_seconds(env):
+    """19/10/2026 : un carnet relu il y a moins de 20 s dans le même cycle n'est pas relu une deuxième fois."""
     from polymarket_agent.main import _reread_book
     make, _, clock = env
 
@@ -646,34 +415,24 @@ def test_a_book_reread_by_one_portfolio_is_reused_by_the_next_within_seconds(env
     assert Counting.reads == 3
 
 
-def test_idle_ghost_beats_only_every_half_hour_and_cycle_publishes_timings(env, paths, tmp_path):
-    """21/10/2026 : les battements faisaient 92,5 % des lignes des journaux fantômes. Un fantôme
-    qui n'a rien écrit pendant le cycle ne bat plus qu'à intervalle (`cycle.battement_fantomes_minutes`) ;
-    le principal bat à chaque cycle. Le minutage et les abstentions sont publiés dans la base."""
+def test_every_cycle_beats_and_publishes_timings_and_abstentions(env, paths):
     make, db, clock = env
-    deps = make(FakeGamma([raw_market()]), FakeClob({"tokA": good_book()}),
-                strategies=[pipeline_strategy("fantome")])
-    shadow_path = tmp_path / "fantome" / "naive_favorite_v1.0.0.jsonl"
+    deps = make(FakeGamma([raw_market()]), FakeClob({"tokA": good_book()}))
 
-    def beats(path):
-        return sum(json.loads(l)["type"] == "HEARTBEAT" for l in path.read_text().splitlines())
-    run_cycle(deps)  # achat du fantôme : il a écrit, il bat
-    assert beats(shadow_path) == 1 and beats(paths[0]) == 1
-    clock["now"] = NOW + timedelta(minutes=5)
-    run_cycle(deps)  # rien écrit, battement récent : pas de battement
-    assert beats(shadow_path) == 1 and beats(paths[0]) == 2
-    clock["now"] = NOW + timedelta(minutes=31)
+    def beats():
+        return sum(t == "HEARTBEAT" for t in _ledger_types(paths[0]))
     run_cycle(deps)
-    assert beats(shadow_path) == 2 and beats(paths[0]) == 3
+    clock["now"] = NOW + timedelta(minutes=5)
+    run_cycle(deps)
+    assert beats() == 2
     timings = json.loads(db.get_value("durees_cycle"))["etapes"]
-    assert {"reglements", "scanner", "references", "carnets", "fantomes", "total"} <= set(timings)
-    reasons = json.loads(db.get_value("abstentions"))["portefeuilles"]["fantome:naive_favorite_v1.0.0"]
-    assert reasons["naive_favorite"]["marches"] == 1
+    assert {"journal", "reglements", "scanner", "carnets", "strategie", "total"} <= set(timings)
+    reasons = json.loads(db.get_value("abstentions"))["strategies"]["naive_favorite"]
+    assert reasons["marches"] == 1
 
 
-def test_round_robin_and_once_gamma():
-    from polymarket_agent.main import _OnceGamma, _round_robin
-    assert _round_robin([["a1", "a2"], ["b1"], [], ["c1", "c2", "c3"]]) == ["a1", "b1", "c1", "a2", "c2", "c3"]
+def test_once_gamma_reads_each_market_once():
+    from polymarket_agent.main import _OnceGamma
     gamma = FakeGamma([raw_market("m1")])
     calls = []
     real = gamma.get_market
@@ -745,37 +504,8 @@ def test_settlement_reads_held_markets_by_batches():
     assert down.singles == []  # pas 250 lectures une par une pendant une panne
 
 
-def test_settled_bets_are_judged_from_the_journal_and_proven_winners_bet_more(tmp_path):
-    """« Grossir les gagnantes » (Etienne, 21/10/2026) : une prévision réglée dans le journal du fantôme
-    est jugée tout de suite (avant : 15 vérifications par heure pour toute l'arène, personne n'atteignait
-    20 jugées) ; renfort jusqu'à 2 pour qui prouve plus d'avantage qu'il n'en suppose."""
-    from polymarket_agent import strategy_health
-    db = Database(tmp_path / "db.sqlite")
-    entries = [{"type": "SETTLE", "data": {"token_id": "t1", "payout_per_share": "1"}},
-               {"type": "SETTLE", "data": {"token_id": "t2", "payout_per_share": "0"}},
-               {"type": "RESET", "data": {}},
-               {"type": "SETTLE", "data": {"token_id": "t3", "payout_per_share": "1"}}]
-    assert strategy_health.settled_outcomes(entries) == {"t3": 1.0}  # une remise à zéro repart de rien
-    items = [{"token_id": f"t{i}", "market_id": f"m{i}", "p": 0.9, "price": 0.8, "ts": "x"} for i in range(25)]
-    settled = {f"t{i}": 1.0 for i in range(25)}
-    s = strategy_health.score(db, items, settled)
-    assert s["jugees"] == 25 and s["avance"] > 0
-    cfg = strategy_health.config({"sante_strategies": {"renfort": {"min_operations": 30, "confiance_jour_min": 0.8,
-                                                                   "paris_fictifs": 30, "max": 2.0}}})
-    assert strategy_health.prudence(s, cfg) == 1.0  # prouvée : mise entière (au lieu de ½)
-    row = {"closed_trades": 60, "excess_wins": 6.8, "assumed_edge": 0.0509, "day_confidence": 0.95}
-    assert strategy_health.boost(row, cfg) == round(6.8 / 90 / 0.0509, 4)  # contrer_crypto_patiente : ≈ 1,48
-    assert strategy_health.boost(dict(row, excess_wins=40), cfg) == 2.0  # plafond
-    assert strategy_health.boost(dict(row, excess_wins=1.0), cfg) == 1.0  # moins que supposé : pas de renfort
-    assert strategy_health.boost(dict(row, closed_trades=20), cfg) == 1.0  # trop tôt
-    assert strategy_health.boost(dict(row, day_confidence=0.7), cfg) == 1.0  # une belle journée ne suffit pas
-    assert strategy_health.boost(row, strategy_health.config({})) == 1.0  # sans réglage : aucun renfort
-    real = strategy_health.config(load_settings())
-    assert real["renfort"]["max"] == 2.0 and real["renfort"]["min_operations"] == 30
-
-
 def test_strategie_muette_sans_raison_dit_pourquoi():
-    """28/10/2026 : `mots_nouveaux`, `suivre_inities` : « abstentions {} » sur 427 marchés vus (aucune référence rattachée)."""
+    """28/10/2026 : une stratégie qui ne propose rien et ne note aucune raison dit pourquoi malgré elle."""
     from polymarket_agent.main import _raison_par_defaut
     from polymarket_agent.strategy_engine import StrategyOutput
     out = StrategyOutput()
@@ -791,58 +521,47 @@ def test_strategie_muette_sans_raison_dit_pourquoi():
     assert vide.abstentions == {}  # aucun marché vu : rien à dire
 
 
-def test_principal_cancels_resting_buy_when_the_match_starts_but_the_ghost_keeps_it(env, paths):
-    """Enquête du 28/10/2026 : 320 jetons d'ordres posés servis en match, −9,8 % par pari (z −2,8), contre −0,3 % pour les achats
-    immédiats. Le principal annule son ordre posé au coup d'envoi ; le fantôme, lui, est servi (c'est la mesure)."""
-    make, db, clock = env
-    crown(paths)
-    start = (NOW + timedelta(minutes=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    market = raw_market(gameStartTime=start)
-    run_cycle(make(FakeGamma([market]), FakeClob({"tokA": good_book()}), strategies=[_patient()]))
-    assert {o["portfolio"] for o in db.open_orders()} == {"principal", "fantome:naive_favorite_v1.0.0"}
-    clock["now"] = NOW + timedelta(minutes=10)  # le match a commencé
-    through = make_book("tokA", bids=(("0.86", "500"),), asks=(("0.87", "500"),), ts=clock["now"])
-    run_cycle(make(FakeGamma([market]), FakeClob({"tokA": through}), strategies=[_patient()]))
-    assert "BUY" not in _ledger_types(paths[0])  # rien pour le principal
-    statuses = {r["portfolio"]: r["status"] for r in db.conn.execute("SELECT portfolio, status FROM pending_orders WHERE status != 'REMPLACE'")}
-    assert statuses["principal"] == "ANNULE"
-    assert statuses["fantome:naive_favorite_v1.0.0"] in ("EXECUTE", "OUVERT")
-
-
-def test_principal_still_gets_its_resting_buy_before_the_match(env, paths):
-    make, db, clock = env
-    crown(paths)
-    start = (NOW + timedelta(hours=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    market = raw_market(gameStartTime=start)
-    run_cycle(make(FakeGamma([market]), FakeClob({"tokA": good_book()}), strategies=[_patient()]))
-    clock["now"] = NOW + timedelta(minutes=10)
-    through = make_book("tokA", bids=(("0.86", "500"),), asks=(("0.87", "500"),), ts=clock["now"])
-    run_cycle(make(FakeGamma([market]), FakeClob({"tokA": through}), strategies=[_patient()]))
-    assert "BUY" in _ledger_types(paths[0])
-
-
-def test_strategy_flagged_annuler_au_coup_d_envoi_loses_its_resting_order_at_kickoff_even_without_the_global_setting(env, paths):
-    """Sœur d'une stratégie qui subit les ordres posés en match (28/10/2026) : `annuler_au_coup_d_envoi` (par stratégie, réglage global du principal
-    éteint) fait tomber l'ordre posé du fantôme au coup d'envoi, et la copie du principal avec lui."""
-    make, db, clock = env
-    crown(paths)
-    settings = load_settings()
-    settings["arena"] = yaml.safe_load((ROOT / "config" / "promotion.yaml").read_text(encoding="utf-8"))
-    settings["arena"].update(essai={}, part_max_par_strategie=None, garde_fou_jour=None, mise_avantage_mesure=None)
-    settings["fantomes"] = {}
-    settings["principal"] = {"annuler_posees_au_coup_d_envoi": False}
+def _kickoff_run(make, clock, flag):
+    """Ordre posé 7 minutes avant le coup d'envoi, puis un vendeur qui traverse son prix 3 minutes après."""
     start = (NOW + timedelta(minutes=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
     market = raw_market(gameStartTime=start)
 
-    def strategies(flag):
+    def strategies():
         s = _patient()
         s.annuler_au_coup_d_envoi = flag
         return [s]
+    run_cycle(make(FakeGamma([market]), FakeClob({"tokA": good_book()}), strategies=strategies()))
+    clock["now"] = NOW + timedelta(minutes=10)  # le match a commencé
+    through = make_book("tokA", bids=(("0.86", "500"),), asks=(("0.87", "500"),), ts=clock["now"])
+    run_cycle(make(FakeGamma([market]), FakeClob({"tokA": through}), strategies=strategies()))
 
-    run_cycle(make(FakeGamma([market]), FakeClob({"tokA": good_book()}), settings, strategies(True)))
+
+def test_resting_buy_is_served_during_the_match_by_default(env, paths):
+    """Réglage du dépôt (`annuler_au_coup_d_envoi: false`) : comme dans l'ancien labo, l'ordre posé avant le match
+    reste posé et peut être servi pendant le jeu."""
+    make, _, clock = env
+    _kickoff_run(make, clock, False)
+    assert "BUY" in _ledger_types(paths[0])
+
+
+def test_strategy_flagged_annuler_au_coup_d_envoi_loses_its_resting_order_at_kickoff(env, paths):
+    """Enquête du 28/10/2026 : les ordres posés servis en match perdaient −9,8 % par pari (sélection adverse).
+    Avec `annuler_au_coup_d_envoi`, l'ordre posé tombe au coup d'envoi."""
+    make, db, clock = env
+    _kickoff_run(make, clock, True)
+    assert "BUY" not in _ledger_types(paths[0])
+    statuses = {r["status"] for r in db.conn.execute("SELECT status FROM pending_orders WHERE status != 'REMPLACE'")}
+    assert statuses == {"ANNULE"}
+
+
+def test_resting_buy_before_the_match_is_still_served_when_flagged(env, paths):
+    make, _, clock = env
+    start = (NOW + timedelta(hours=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    market = raw_market(gameStartTime=start)
+    s = _patient()
+    s.annuler_au_coup_d_envoi = True
+    run_cycle(make(FakeGamma([market]), FakeClob({"tokA": good_book()}), strategies=[s]))
     clock["now"] = NOW + timedelta(minutes=10)
     through = make_book("tokA", bids=(("0.86", "500"),), asks=(("0.87", "500"),), ts=clock["now"])
-    run_cycle(make(FakeGamma([market]), FakeClob({"tokA": through}), settings, strategies(True)))
-    rows = [(r["portfolio"], r["status"]) for r in db.conn.execute("SELECT portfolio, status FROM pending_orders")]
-    assert ("fantome:naive_favorite_v1.0.0", "ANNULE") in rows  # l'ordre posé avant le match tombe au coup d'envoi
-    assert ("principal", "ANNULE") in rows  # la copie du principal porte le même identifiant de stratégie : elle tombe aussi (copie fidèle)
+    run_cycle(make(FakeGamma([market]), FakeClob({"tokA": through}), strategies=[s]))
+    assert "BUY" in _ledger_types(paths[0])

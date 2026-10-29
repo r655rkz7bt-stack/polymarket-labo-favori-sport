@@ -36,8 +36,7 @@ class _Report:
 
 def test_dashboard_failure_never_stops_the_cycle(tmp_path):
     settings = {"dashboard": {"output_dir": str(tmp_path / "site"), "every_minutes": 30},
-                "paths": {"ledger": str(tmp_path / "absent.jsonl"), "bankruptcy_lock": str(tmp_path / "x.lock"),
-                          "shadow_dir": str(tmp_path / "fantome")}}
+                "paths": {"ledger": str(tmp_path / "absent.jsonl"), "bankruptcy_lock": str(tmp_path / "x.lock")}}
     result = run_simulation.maybe_build_dashboard(settings, b"k" * 40, None, _Report())
     assert result.startswith("échec")
 

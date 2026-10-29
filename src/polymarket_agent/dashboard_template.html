@@ -7,7 +7,7 @@
 <style>
 /* Mise en page : un organisme vivant, en nuances de gris, inspiré de Polymarket.
    Haut (refonte du 17/10/2026, demande d'Etienne) : le cœur qui bat, entouré des RÉSULTATS
-   (capital, 24 h, gains, arène, palier…), en planche anatomique propre : légendes en deux
+   (capital, 24 h, gains, confiance, palier…), en planche anatomique propre : légendes en deux
    colonnes, traits qui partent d'un point du cœur. Puis le résumé et le détail.
    Couleurs : gris partout ; bleu pastel = hausse, rouge pastel = baisse (toujours avec ▲ ▼ : jamais
    la couleur seule). Contraste vérifié sur le fond des cartes : bleu 9,8:1, rouge 9,4:1.
@@ -88,30 +88,11 @@ h2 { font-size: 1.15rem; font-weight: 650; letter-spacing: -0.01em; margin: 0; t
   color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
 .meter-row b { color: var(--ink); font-weight: 600; }
 
-/* --- dernières actions du chercheur (journal de recherche), dans le résumé */
-.explain { display: block; font-weight: 400; color: var(--ink-2); font-size: 0.82rem; line-height: 1.4; margin: 3px 0 2px; }
-.funnel-group { margin-top: 14px; }
-.funnel-group h3 { margin: 0 0 4px; font-size: 0.95rem; }
+/* --- « À la une » (config/dashboard.yaml) et explication de la stratégie */
+.explain { display: block; font-weight: 400; color: var(--ink-2); font-size: 0.86rem; line-height: 1.45; margin: 0 0 4px; }
 .une { margin-top: 18px; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--raised); }
 .une ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 6px; }
 .une li { color: var(--ink); font-size: 0.92rem; line-height: 1.45; overflow-wrap: anywhere; }
-.research { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 8px; }
-.research .kicker { margin-bottom: 2px; }
-.research details { background: var(--raised); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
-.research summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 4px 12px; align-items: baseline; margin: 0; color: var(--ink); font: 0.9rem/1.45 var(--sans); letter-spacing: 0; }
-.research summary::-webkit-details-marker { display: none; }
-.research summary .when { font: 500 0.74rem var(--mono); color: var(--muted); white-space: nowrap; }
-.research summary .what { overflow-wrap: anywhere; }
-.research summary .chev { font: 500 0.8rem var(--mono); color: var(--muted); transition: transform 0.15s; }
-.research details[open] summary .chev { transform: rotate(180deg); }
-.research details[open] summary .what { color: var(--ink); }
-.research summary:focus-visible { outline: 2px solid var(--ink-2); outline-offset: 4px; border-radius: 6px; }
-.research dl { margin: 10px 0 2px; display: grid; gap: 6px; }
-.research dt { font: 500 0.7rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-.research dd { margin: 0; color: var(--ink-2); font-size: 0.86rem; overflow-wrap: anywhere; }
-@media (max-width: 600px) { .research summary { grid-template-columns: minmax(0, 1fr) auto; }
-  .research summary .when { grid-column: 1 / -1; } }
 
 /* --- organisme : un cœur anatomique en points, ses constantes tout autour (planche anatomique) */
 .organism { position: relative; overflow: hidden; margin-inline: calc(50% - 50vw); border-radius: 0;
@@ -155,30 +136,10 @@ h2 { font-size: 1.15rem; font-weight: 650; letter-spacing: -0.01em; margin: 0; t
 .folded > :not(.head):not(.fold-sum) { display: none !important; }
 .folded { padding-bottom: 16px; }
 .folded > .head { margin-bottom: 10px; }
-/* Journal : une ligne par événement, l'heure à gauche, le détail en dépliant. */
-.journal { display: grid; gap: 2px; margin-top: 4px; }
-.journal details { border-radius: 10px; padding: 7px 10px; }
-.journal details[open], .journal details:hover { background: var(--raised); }
-.journal summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px;
-  align-items: baseline; margin: 0; color: var(--ink); font: 0.9rem/1.45 var(--sans); letter-spacing: 0; }
-.journal summary::-webkit-details-marker { display: none; }
-.journal .when { font: 500 0.72rem var(--mono); color: var(--muted); white-space: nowrap; }
-.journal .tag { font: 500 0.66rem var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-right: 8px; }
-.journal .tag.up { color: var(--blue); } .journal .tag.down { color: var(--red); }
-.journal dl { margin: 6px 0 2px 108px; display: grid; gap: 4px; }
-.journal dt { font: 500 0.68rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-.journal dd { margin: 0; color: var(--ink-2); font-size: 0.84rem; overflow-wrap: anywhere; }
-@media (max-width: 600px) { .journal summary { grid-template-columns: 1fr; gap: 2px; } .journal dl { margin-left: 0; } }
 .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .pill { font: 500 0.76rem var(--mono); color: var(--ink-2); background: var(--raised); border: 1px solid var(--line);
   border-radius: 999px; padding: 4px 11px; }
 .pill b { color: var(--ink); font-weight: 600; }
-/* Arène compacte : explication sur deux lignes au plus, détails au toucher. */
-.row .explain { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.row.open .explain { -webkit-line-clamp: unset; }
-.row .more-info { display: none; } .row.open .more-info { display: block; }
-.row:not(.th) { cursor: pointer; }
-.row:not(.th):hover { background: rgba(255,255,255,0.02); }
 /* Téléphone : les tableaux deviennent des fiches empilées (plus de colonnes coupées à droite). */
 @media (max-width: 600px) {
   table.stack thead { display: none; }
@@ -194,7 +155,6 @@ h2 { font-size: 1.15rem; font-weight: 650; letter-spacing: -0.01em; margin: 0; t
     letter-spacing: 0.06em; text-transform: uppercase; }
 }
 details.howto summary { margin: 0 0 6px; }
-#positions-arena-box { margin-top: 10px; }
 /* Ordres du capital principal : à part, liseré bleu pastel (le vrai portefeuille). */
 .main-orders { border-color: var(--blue-line); box-shadow: inset 3px 0 0 var(--blue-line); }
 .orders { display: grid; margin-top: 12px; }
@@ -214,9 +174,6 @@ details.howto summary { margin: 0 0 6px; }
   .order .when { grid-column: 1; } .order .side { grid-column: 2; } .order .amt { grid-column: 3; grid-row: 1 / span 2; }
   .order .what { grid-column: 1 / 3; }
 }
-/* Courbes qui se dessinent (comme sur Polymarket) : au survol, au toucher, à l'apparition. */
-.spark-wrap { cursor: pointer; }
-
 /* --- graphiques */
 .chart { position: relative; }
 .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
@@ -251,45 +208,22 @@ svg text { font-family: var(--mono); }
 .legend span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .legend svg { width: 22px; height: 8px; flex: none; }
 
-/* --- arène : liste façon Polymarket (niveau, volume, 7 j, courbe) */
-.rows { display: grid; }
-.row { display: grid; grid-template-columns: 26px minmax(0, 1.6fr) minmax(120px, 1.4fr) 92px 64px 104px; gap: 12px;
-  align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--line); }
-.row:last-child { border-bottom: 0; }
-.row.th { padding-top: 0; font: 500 0.7rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-.row .rank { font: 500 0.82rem var(--mono); color: var(--muted); }
-.row .name { font-weight: 600; font-size: 0.92rem; overflow-wrap: break-word; min-width: 0; }
-.row .name .sub { display: block; font-weight: 400; color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
-.row.th .num { font: inherit; }
-.row .num { font: 500 0.88rem var(--mono); text-align: right; white-space: nowrap; }
-.row .num small { display: block; color: var(--muted); font-size: 0.74rem; }
-.row svg { display: block; width: 100%; height: auto; }
-.chip { display: inline-flex; align-items: center; gap: 6px; font: 500 0.72rem var(--mono); letter-spacing: 0.04em;
-  padding: 2px 9px; border-radius: 999px; background: var(--raised); color: var(--ink-2); border: 1px solid var(--line-2);
-  white-space: nowrap; vertical-align: 1px; margin-left: 6px; }
-.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.chip.hi { color: var(--blue); background: var(--blue-soft); border-color: var(--blue-line); }
-.chip.off::before { background: transparent; border: 1.2px solid currentColor; }
-@media (max-width: 720px) {
-  .row { grid-template-columns: 22px minmax(0, 1fr) 96px; grid-template-areas: "rank name cap" "rank spark spark"; row-gap: 8px; }
-  .row .rank { grid-area: rank; align-self: start; padding-top: 2px; } .row .name { grid-area: name; }
-  .row .c-cap { grid-area: cap; align-self: start; } .row .c-spark { grid-area: spark; }
-  .row .c-ops, .row .c-track { display: none; }
-  .row.th .c-spark { display: none; }
-}
+/* --- la stratégie : chiffres de confiance, puis ses courbes chargées à la demande (21/10/2026) */
+.fiche-open { all: unset; cursor: pointer; margin-top: 16px; display: inline-flex; align-items: center; gap: 8px;
+  font: 500 0.82rem var(--mono); color: var(--ink); background: var(--raised); border: 1px solid var(--line-2);
+  border-radius: 999px; padding: 7px 14px; }
+.fiche-open:hover { border-color: var(--ink-2); }
+.fiche-open:focus-visible { outline: 2px solid var(--ink-2); outline-offset: 2px; }
+.fiche { min-width: 0; padding: 6px 0 4px; }
+.fiche .ranges { flex-wrap: wrap; border-radius: 14px; }
+.fiche table { width: 100%; }
+.fiche .legend { margin-top: 4px; }
+.fiche .legend svg { width: 22px; height: 8px; display: inline; }
+.fiche .chart svg { width: 100%; height: auto; }
+.fiche td svg { width: 120px; height: 12px; }
+#st-reglages { margin-top: 12px; }
 
-/* --- fiche d'une stratégie (21/10/2026) : sous la ligne touchée, sur toute la largeur */
-.row { cursor: pointer; }
-.row .fiche { display: none; grid-column: 1 / -1; cursor: auto; min-width: 0; padding: 6px 0 4px; }
-.row.open .fiche { display: block; }
-.row .fiche .ranges { flex-wrap: wrap; border-radius: 14px; }
-.row .fiche table { width: 100%; }
-.row .fiche .legend { margin-top: 4px; }
-.row .fiche .legend svg { width: 22px; height: 8px; display: inline; }
-.row .fiche .chart svg { width: 100%; height: auto; }
-.row .fiche td svg { width: 120px; height: 12px; }
-
-/* --- aujourd'hui : quatre colonnes de phrases (capital, arène, opérations, machine) */
+/* --- aujourd'hui : quatre colonnes de phrases (capital, stratégie, opérations, machine) */
 .today { display: grid; gap: 18px 28px; grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr)); }
 .today h3, .h3 { font: 500 0.72rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
 .today ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
@@ -338,8 +272,6 @@ td { color: var(--ink-2); }
 .state.down { color: var(--ink-2); } .state.wait { color: var(--ink-2); }
 details summary { cursor: pointer; color: var(--muted); font: 500 0.78rem var(--mono); margin-top: 12px; letter-spacing: 0.04em; }
 details summary:focus-visible { outline: 2px solid var(--ink-2); outline-offset: 2px; }
-ul.files { list-style: none; padding: 0; margin: 6px 0 16px; display: grid; gap: 6px; font-size: 0.86rem; color: var(--ink-2); }
-ul.files li span { font-family: var(--mono); color: var(--muted); margin-right: 10px; }
 footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center; padding-top: 6px; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -360,7 +292,7 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
   </div>
   <nav class="tabs" aria-label="Sections">
     <a href="#organisme">Cœur</a><a href="#resume">Résumé</a><a href="#principal">Principal</a><a href="#aujourdhui">Aujourd'hui</a><a href="#capital">Capital</a>
-    <a href="#arene">Arène</a><a href="#entonnoir">Entonnoir</a><a href="#positions">Positions</a><a href="#journal">Journal</a><a href="#systeme">Système</a>
+    <a href="#strategie">Stratégie</a><a href="#positions">Positions</a><a href="#journal">Journal</a><a href="#systeme">Système</a>
   </nav>
 </header>
 
@@ -375,13 +307,12 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
       <p class="headline" id="headline"></p>
     </div></div>
     <div class="stage" id="stage"><canvas id="heart" role="img" aria-label="Cœur du système"></canvas><div id="labels"></div></div>
-    <div class="inner"><p class="kicker o-foot" id="o-foot">un battement = un cycle de 5 min</p></div>
+    <div class="inner"><p class="kicker o-foot" id="o-foot">un battement = un cycle</p></div>
   </section>
 
   <section id="resume" class="card hero" aria-label="Résumé de la situation">
     <div class="head"><h2>Résumé</h2><span class="kicker" id="resume-kicker"></span></div>
     <div class="une" id="une" hidden></div>
-    <div class="journal" id="research" aria-label="Journal du laboratoire"></div>
     <div class="pills" id="facts"></div>
     <div class="split">
       <div class="split-labels"><span id="split-left"></span><span id="split-right"></span></div>
@@ -390,7 +321,7 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
   </section>
 
   <section id="principal" class="card main-orders" aria-label="Ordres du capital principal">
-    <div class="head"><h2>Ordres du capital principal</h2><span class="kicker">le vrai portefeuille · à part de l'arène</span></div>
+    <div class="head"><h2>Ordres du capital principal</h2><span class="kicker">le seul portefeuille · tradé par la stratégie</span></div>
     <div class="pills" id="pr-pills" style="margin-top:0"></div>
     <div class="orders" id="pr-list"></div>
     <details id="pr-posed-box"><summary id="pr-posed-sum">Ordres posés en attente</summary><div class="scroll"><table id="pr-posed"></table></div></details>
@@ -412,41 +343,28 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
     <details><summary>Voir les valeurs</summary><div class="scroll" id="chart-table"></div></details>
   </section>
 
-  <section id="arene" class="card">
-    <div class="head"><h2>Arène des stratégies</h2><span class="kicker">portefeuilles fantômes de 1 000</span></div>
-    <p class="note" id="arena-note"></p>
-    <div class="rows" id="arena" style="margin-top:12px"></div>
-    <div class="head" style="margin:26px 0 6px"><h3 class="h3">Classement dans le temps</h3>
-      <span class="kicker" id="hist-kicker">une photo par heure · 1 = en tête · les 10 premières</span></div>
-    <div class="chart" id="arena-hist"></div>
-    <details><summary>Voir les classements</summary><div class="scroll"><table id="arena-hist-table"></table></div></details>
-  </section>
-
-  <section id="entonnoir" class="card">
-    <div class="head"><h2>Entonnoir</h2><span class="kicker">chaque stratégie qui gagne, découpée en morceaux</span></div>
-    <details class="howto"><summary>Comment le lire ?</summary><p class="note">Une « fille » est la stratégie mère jouée sur
-      un seul morceau des marchés (un sujet, une tranche de prix, un délai, OUI ou NON). Si une fille fait nettement mieux que
-      sa mère, c'est ce morceau qui fait gagner ; on combinera ensuite les meilleurs morceaux. « Contre la mère » compare
-      chaque fille à ce que la mère a gagné depuis la naissance de la fille (comparaison équitable). Il faut une vingtaine
-      d'opérations clôturées avant de conclure.</p></details>
-    <div id="pareto"></div>
-    <div id="funnel"></div>
+  <section id="strategie" class="card">
+    <div class="head"><h2>La stratégie</h2><span class="kicker" id="st-kicker"></span></div>
+    <p class="explain" id="st-explain"></p>
+    <p class="note" id="st-verdict"></p>
+    <div class="cap-stats" id="st-stats" style="margin-top:14px"></div>
+    <div class="pills" id="st-reglages"></div>
+    <details id="st-abst-box"><summary id="st-abst-sum">Ce qu'elle a vu au dernier cycle</summary>
+      <div class="scroll"><table id="st-abst"></table></div></details>
+    <button type="button" class="fiche-open" id="st-open" aria-expanded="false">Voir ses courbes (capital, pari par pari, confiance, par jour) ▾</button>
+    <div class="fiche" id="st-fiche" hidden></div>
   </section>
 
   <section id="positions" class="card">
-    <div class="head"><h2>Positions ouvertes</h2><span class="kicker">capital principal · prévision ━ et prix actuel ●</span></div>
+    <div class="head"><h2>Positions ouvertes</h2><span class="kicker">prévision ━ et prix actuel ●</span></div>
     <div class="scroll"><table id="positions-t"></table></div>
-    <details id="positions-arena-box"><summary id="positions-arena-sum">Positions des stratégies de l'arène</summary>
-      <div class="scroll"><table id="positions-arena"></table></div></details>
   </section>
 
   <section id="ordres-poses" class="card">
-    <div class="head"><h2>Ordres posés</h2><span class="kicker">tenue de marché : récompenses estimées et sélection adverse (7 jours)</span></div>
-    <p class="note">Récompenses de liquidité : ESTIMATION d'après la formule de Polymarket, jamais comptée dans le capital
-      (versée seulement les jours à 1 $ ou plus). Markout : écart moyen par part entre notre prix et le prix du milieu plus
-      tard (positif = bon), ordres servis en blanc et ordres manqués en gris dessous, nombre de cas entre parenthèses ;
-      si les servis font nettement moins bien que les manqués, on est servi quand on a tort.</p>
-    <div class="scroll"><table id="rewards-t"></table></div>
+    <div class="head"><h2>Ordres posés</h2><span class="kicker">sélection adverse (7 jours)</span></div>
+    <p class="note">Markout : écart moyen par part entre notre prix et le prix du milieu plus tard (positif = bon),
+      ordres servis en blanc et ordres manqués en gris dessous, nombre de cas entre parenthèses ; si les servis font
+      nettement moins bien que les manqués, on est servi surtout quand on a tort.</p>
     <div class="scroll"><table id="markout-t"></table></div>
   </section>
 
@@ -462,7 +380,7 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
   </section>
 
   <div class="grid2" id="systeme">
-    <section class="card wide"><div class="head"><h2>Pouls de la machine</h2><span class="kicker">un battement = un cycle de 5 min</span></div>
+    <section class="card wide"><div class="head"><h2>Pouls de la machine</h2><span class="kicker" id="pulse-kicker">un point = un cycle</span></div>
       <div class="pulse">
         <div class="head" style="margin-bottom:8px"><span class="kicker">96 derniers cycles (durée en secondes)</span>
           <span class="kicker" id="pulse-legend">● réussi · ○ en erreur</span></div>
@@ -470,9 +388,7 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
       </div>
       <div class="console" id="console" aria-label="Constantes du système"></div>
     </section>
-    <section class="card"><div class="head"><h2>Sources d'information</h2><span class="kicker">observations 24 h</span></div>
-      <div class="scroll"><table id="sources"></table></div></section>
-    <section class="card"><div class="head"><h2>Système</h2></div><div id="health"></div><div id="costs"></div><div id="experiments"></div></section>
+    <section class="card"><div class="head"><h2>Système</h2></div><div id="health"></div><div id="costs"></div></section>
   </div>
 
   <footer>Simulation · unités virtuelles · aucun argent réel · règle n°1 : à 0 tu meurs</footer>
@@ -485,13 +401,14 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
   var D = JSON.parse(document.getElementById("data").textContent);
   var NS = "http://www.w3.org/2000/svg";
   var C = D.capital, SYS = D.systeme || {}, H = D.sante || {};
+  var ST = D.strategie || {}, CONF = ST.confiance || {}, STRATS = ST.strategies || [];
 
-  // ---------------------------------------------------------------- mise en page (réglée par le chercheur)
+  // ---------------------------------------------------------------- mise en page (config/dashboard.yaml)
   // config/dashboard.yaml → ordre des blocs, blocs cachés, « À la une ». Le résumé et le capital ne
   // sont jamais cachés (filtré côté Python). Les liens du menu suivent le même ordre.
   (function layout() {
     var L = D.mise_en_page || {}, ids = (L.ordre || []).slice(), hide = L.masquer || [];
-    var blocks = ["organisme", "resume", "principal", "aujourdhui", "capital", "arene", "entonnoir", "positions", "ordres-poses", "journal",
+    var blocks = ["organisme", "resume", "principal", "aujourdhui", "capital", "strategie", "positions", "ordres-poses", "journal",
       "decisions-recentes", "systeme"].map(function (id) { return document.getElementById(id); }).filter(Boolean);
     if (blocks.length) {
       var anchor = blocks[blocks.length - 1].nextSibling, parent = blocks[0].parentNode;
@@ -508,7 +425,7 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
     var une = L.a_la_une || {}, box = document.getElementById("une");
     if (box && (une.points || []).length) {
       var k = document.createElement("div"); k.className = "kicker";
-      k.textContent = "À la une · selon le chercheur" + (une.date ? " · " + une.date : "");
+      k.textContent = "À la une" + (une.date ? " · " + une.date : "");
       var ul = document.createElement("ul");
       une.points.forEach(function (p) { var li = document.createElement("li"); li.textContent = p; ul.appendChild(li); });
       box.appendChild(k); box.appendChild(ul); box.hidden = false;
@@ -564,8 +481,8 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
     holder.appendChild(btn); apply();
     return apply;
   }
-  // Nom de stratégie lisible : sans « fantome: » ni version, coupure permise après chaque « _ ».
-  function sname(n) { return String(n || "").replace(/^fantome:/, "").replace(/_v[\d.]+$/, "").replace(/_/g, "_\u200b"); }
+  // Nom de stratégie lisible : sans version, coupure permise après chaque « _ ».
+  function sname(n) { return String(n || "").replace(/_v[\d.]+$/, "").replace(/_/g, "_\u200b"); }
   function table(id, head, rows, empty, limit) {
     var t = document.getElementById(id); t.textContent = ""; t.classList.add("stack");
     if (!rows.length) { t.replaceWith(el("p", "empty", empty)); return; }
@@ -635,8 +552,6 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
   var initial = D.capital_initial, total = Number(C.capital_total_estime), realized = Number(C.capital_realise),
     target = Number(C.palier_suivant), cash = Number(C.solde_disponible), invested = Number(C.capital_immobilise);
   var perf = initial ? (total / initial - 1) * 100 : 0;
-  var arena = D.arene || [], best = arena.filter(function (s) { return !s.eliminee && s.operations > 0; })[0];
-  var share = arena.filter(function (s) { return s.champion; })[0];
   document.getElementById("hero-kicker").textContent = "Capital total estimé · " + short(D.genere_le) + " UTC";
   document.getElementById("resume-kicker").textContent = "situation au " + short(D.genere_le) + " UTC";
   var hv = document.getElementById("hero-value"); hv.textContent = fmt(total, 2);
@@ -645,23 +560,19 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
     " · disponible " + fmt(cash, 2)));
   var headline = C.faillite ? "Faillite : le trading est arrêté définitivement. Seul Etienne peut réinitialiser."
     : !alive ? "Le cœur ne bat plus depuis " + ago(beatMin).replace("il y a ", "") + " : vérifier cron-job.org et GitHub Actions."
-    : D.situation ? D.situation.phrase  // écrite par dashboard.situation (pourquoi ce champion, ou pourquoi aucun)
-    : C.champion ? "Le capital principal suit " + C.champion + ", et l'arène continue de chercher mieux."
-    : "Aucune stratégie n'a encore fait ses preuves. Le capital principal attend, l'arène s'entraîne.";
+    : D.situation ? D.situation.phrase  // écrite par dashboard.situation
+    : "Le capital principal est tradé par la stratégie.";
   var hl = document.getElementById("headline"); hl.textContent = headline;
   if (alive && !C.faillite && D.situation && D.situation.detail) hl.appendChild(el("small", null, D.situation.detail));
   var cyclesOk = (H.cycles_24h || {}).OK || 0, cyclesAll = Object.keys(H.cycles_24h || {}).reduce(function (a, k) {
     return a + H.cycles_24h[k]; }, 0);
-  var srcs = D.sources ? D.sources.etat : {}, srcNames = Object.keys(srcs).filter(function (n) { return n !== "justesse_gemini" && n !== "sources_resolution"; });
-  var srcOk = srcNames.filter(function (n) { return /^ok/.test(srcs[n]); }).length;
-  // Les chiffres du capital, des gains, de l'arène et du palier sont autour du cœur (en haut) :
+  // Les chiffres du capital, des gains, de la stratégie et du palier sont autour du cœur (en haut) :
   // ici, en pastilles, seulement ce qui n'y est pas.
   (function pills() { var box = document.getElementById("facts");
     function pill(label, value) { var p = el("span", "pill"); p.appendChild(document.createTextNode(label + " "));
       p.appendChild(el("b", null, value)); box.appendChild(p); }
     pill("frais payés", fmt(C.frais_payes, 2));
     pill("perte max. depuis un sommet", fmt(C.drawdown_max * 100, 1) + " %");
-    if (C.detention_estimee > 0) pill("récompense de détention estimée (hors capital)", fmt(C.detention_estimee, 2));
     if (D.audit) pill("audit", fmt(D.audit.verifiees, 0) + " exécutions vérifiées · " +
       (D.audit.anomalies ? "▲ " + D.audit.anomalies + " anomalie(s)" : "aucune anomalie"));
   })();
@@ -697,13 +608,6 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
     var box = document.getElementById("console");
     function line(parts) { var row = el("div"); parts.forEach(function (p) { row.appendChild(el("span", p[1] || "", p[0])); });
       box.appendChild(row); }
-    line([["$ ", "p"], ["etat --sources", "w"]]);
-    srcNames.sort().forEach(function (n) { var s = srcs[n], obs = (D.sources.observations_24h || {})[n];
-      var mark = /^ok/.test(s) ? "●" : /indisponible|échec|erreur/.test(s) ? "○" : "◐";
-      var name = (n + " ").padEnd(22, "."), msg = s.length > 70 ? s.slice(0, 69) + "…" : s;
-      line([["  " + mark + " ", "w"], [name + " "], [msg, /^ok/.test(s) ? "p" : ""], [obs ? "   " + obs + " obs/24h" : ""]]); });
-    if (srcs.justesse_gemini) { line([["$ ", "p"], ["etat --justesse-gemini", "w"]]); line([["  " + srcs.justesse_gemini]]); }
-    if (srcs.sources_resolution) { line([["$ ", "p"], ["etat --sources-de-resolution", "w"]]); line([["  " + srcs.sources_resolution]]); }
     if (D.audit) { line([["$ ", "p"], ["audit --executions", "w"]]);
       line([["  vérifiées " + fmt(D.audit.verifiees, 0) + " · non vérifiables " + fmt(D.audit.non_verifiables, 0) +
         " · règlements conformes " + fmt(D.audit.reglements_verifies || 0, 0) +
@@ -719,15 +623,12 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
 
   var lastCycle = H.dernier_cycle || {};
   // Résultats autour du cœur (refonte du 17/10/2026) : chaque partie porte un RÉSULTAT ; le
-  // système (sources, IA, marchés scannés) est descendu dans le bloc « Système ».
+  // système (marchés scannés, cycles) est descendu dans le bloc « Système ».
   var curve = D.courbe || [], ch24 = null, ref24 = null;
   if (curve.length) { var tEnd = new Date(curve[curve.length - 1][0]).getTime();
     for (var ci = 0; ci < curve.length; ci++) if (new Date(curve[ci][0]).getTime() >= tEnd - 864e5) { ref24 = curve[ci][1]; break; }
     if (ref24 !== null) ch24 = total - ref24; }
   var closedAll = D.cloturees || [], wins = closedAll.filter(function (r) { return r.resultat > 0; }).length;
-  var rewards = (D.ordres_poses || {}).recompenses || {}, bestReward = Object.keys(rewards).reduce(function (m, k) {
-    return Math.max(m, Number(rewards[k].versable) || 0); }, 0);
-  var leader = arena.filter(function (s) { return !s.eliminee && !s.retiree; })[0];
   var gainsR = Number(C.gains_realises_nets), gainsL = Number(C.gains_latents);
   var palierPct = Math.max(0, Math.min(1, (realized - Math.min(target / 1.5, initial)) / (target - Math.min(target / 1.5, initial) || 1))) * 100;
   var tone = function (x) { return x > 0.005 ? "up" : x < -0.005 ? "down" : ""; };
@@ -743,26 +644,27 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
       s: cyclesOk + "/" + cyclesAll + " cycles réussis en 24 h", t: cyclesAll && cyclesOk < cyclesAll ? "down" : "" },
     { k: "oreillette droite · 24 h", u: -0.28, v: -0.05, sd: "l", p: 9, m: 1,
       v1: ch24 === null ? "—" : delta(ch24, 2), s: ref24 === null ? "pas encore 24 h de courbe" : "capital il y a 24 h : " + fmt(ref24, 2), t: tone(ch24 || 0) },
-    { k: "ventricule droit · arène", u: -0.12, v: 0.14, sd: "l", p: 8, m: 1,
-      v1: C.champion ? "champion : " + sname(C.champion) : leader ? "en tête : " + sname(leader.nom) : "aucune stratégie classée",
-      s: leader ? txt(delta((leader.capital / initial - 1) * 100, 1, " %"), " · " + leader.operations + " opérations clôturées") : "",
-      t: leader ? tone(leader.capital - initial) : "" },
+    { k: "ventricule droit · confiance", u: -0.12, v: 0.14, sd: "l", p: 8, m: 1,
+      v1: CONF.operations ? "confiance " + fmt(CONF.confiance_pct, 0) + " %" : "pas encore de pari terminé",
+      s: CONF.operations ? CONF.gagnees + " gagnés pour " + fmt(CONF.attendues, 1) + " attendus" : "la stratégie attend ses premiers règlements",
+      t: CONF.operations ? tone(CONF.en_plus) : "" },
     { k: "apex · palier", u: -0.13, v: 0.44, sd: "l", p: 6, m: 1, v1: fmt(palierPct, 0) + " % vers " + fmt(target, 0),
       s: "capital réalisé " + fmt(realized, 2) },
     { k: "aorte · gains", u: 0.0, v: -0.40, sd: "r", p: 7, m: 1, v1: txt("réalisés ", delta(gainsR, 2)),
       s: txt("latents ", delta(gainsL, 2), " (pas encore encaissés)"), t: tone(gainsR) },
-    { k: "artère pulmonaire · récompenses", u: 0.27, v: -0.29, sd: "r", p: 3, m: 0,
-      v1: bestReward ? "+" + fmt(bestReward, 2) + " $ estimés" : "aucune pour l'instant", s: "tenue de marché, 7 j · hors capital",
-      t: bestReward ? "up" : "" },
+    { k: "artère pulmonaire · ordres posés", u: 0.27, v: -0.29, sd: "r", p: 3, m: 0,
+      v1: fmt(SYS.ordres_poses || 0, 0) + " en attente", s: "servis seulement si un vendeur traverse leur prix" },
     { k: "oreillette gauche · positions", u: 0.28, v: -0.09, sd: "r", p: 5, m: 1, v1: fmt(C.positions_ouvertes, 0) + " positions",
       s: "investi " + fmt(invested, 2) },
     { k: "coronaire · réussite", u: 0.03, v: 0.12, sd: "r", p: 4, m: 0,
-      v1: closedAll.length ? wins + " gagnées sur " + closedAll.length : "aucune opération", s: "dernières opérations clôturées (arène)",
+      v1: closedAll.length ? wins + " gagnées sur " + closedAll.length : "aucune opération", s: "derniers paris terminés",
       t: closedAll.length ? (wins * 2 >= closedAll.length ? "up" : "down") : "" },
     { k: "ventricule gauche · capital", u: 0.2, v: 0.2, sd: "r", p: 10, m: 1, b: fmt(total, 2),
       s: txt(delta(perf, 2, " %"), " depuis le départ · disponible " + fmt(cash, 0)), t: tone(perf) }
   ];
-  document.getElementById("o-foot").textContent = "un battement = un cycle de 5 min · cercle bleu = en hausse, rouge = en baisse";
+  var MIN = H.minutes_par_cycle ? " de " + H.minutes_par_cycle + " min" : "";
+  document.getElementById("o-foot").textContent = "un battement = un cycle" + MIN + " · cercle bleu = en hausse, rouge = en baisse";
+  document.getElementById("pulse-kicker").textContent = "un point = un cycle" + MIN;
 
   // Le cœur : un cœur humain simplifié (deux ventricules, deux oreillettes, aorte, veine cave,
   // artère pulmonaire), dessiné en points comme une gravure au pointillé : relief doux (formes
@@ -1031,44 +933,11 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
     start();
   })();
 
-  // Journal du laboratoire : une phrase courte par événement (changements de champion, actions du
-  // chercheur), le plus récent en haut ; le détail se déplie au toucher.
-  (function journal() {
-    var box = document.getElementById("research"), ev = [];
-    // Phrase courte : coupée au dernier mot entier avant n caractères (le texte complet se déplie).
-    var shortTxt = function (t, n) { t = String(t || "").replace(/\s+/g, " ").trim(); if (t.length <= n) return t;
-      t = t.slice(0, n); return t.slice(0, Math.max(t.lastIndexOf(" "), n * 0.6)).replace(/[\s(:;,]+$/, "") + "…"; };
-    (D.promotions || []).forEach(function (p) {
-      var who = sname(p.champion || p.ancien).replace(/\u200b/g, "");
-      ev.push({ key: p.date, when: short(p.date), tag: p.champion ? "champion" : "destitué", tone: p.champion ? "up" : "down",
-        text: p.champion ? who + " devient champion : le capital principal le suit."
-          : who + " perd sa place de champion : " + (/ne bat plus/.test(p.raison) ? "il ne bat plus « ne rien faire »." : p.raison),
-        details: [{ titre: "raison inscrite au journal signé", texte: p.raison }] }); });
-    (D.chercheur || []).forEach(function (r) {
-      var m = /^(\d{4})-(\d\d)-(\d\d)$/.exec(r.date || ""), h = /(\d{1,2}) ?h/.exec(r.quand || "");
-      ev.push({ key: (r.date || "") + "T" + (h ? ("0" + h[1]).slice(-2) : "00") + ":00", tag: "chercheur",
-        when: (m ? m[3] + "/" + m[2] : r.date) + (h ? " ≈" + ("0" + h[1]).slice(-2) + ":00" : ""),
-        text: shortTxt(r.fait || "aucune action notée", 100),
-        details: [{ titre: "en entier", texte: r.fait }].concat(r.details || []) }); });
-    if (!ev.length) { box.remove(); return; }
-    ev.sort(function (a, b) { return a.key < b.key ? 1 : a.key > b.key ? -1 : 0; });
-    var rows = ev.map(function (e) {
-      var det = el("details"), sum = el("summary"); sum.appendChild(el("span", "when", e.when));
-      var what = el("span"); what.appendChild(el("span", "tag " + (e.tone || ""), e.tag)); what.appendChild(document.createTextNode(e.text));
-      sum.appendChild(what); det.appendChild(sum);
-      var dl = el("dl"); (e.details || []).forEach(function (x) { if (!x.texte) return;
-        dl.appendChild(el("dt", null, x.titre)); dl.appendChild(el("dd", null, x.texte)); });
-      if (dl.children.length) det.appendChild(dl);
-      box.appendChild(det); return det; });
-    var holder = el("div", "more-row"); box.appendChild(holder);
-    collapsible(holder, function () { return rows; }, 4, "événements");
-  })();
-
   // Aujourd'hui : phrases écrites par du code (today.py), groupées par sujet.
   (function todayBox() {
     var box = document.getElementById("today"), items = D.aujourdhui || [];
     if (!items.length) { box.appendChild(el("p", "empty", "Pas encore de résumé.")); return; }
-    [["capital", "Capital"], ["arene", "Arène"], ["operations", "Opérations"], ["machine", "Machine"]].forEach(function (g) {
+    [["capital", "Capital"], ["strategie", "Stratégie"], ["operations", "Opérations"], ["machine", "Machine"]].forEach(function (g) {
       var list = items.filter(function (t) { return t.sujet === g[0]; });
       if (!list.length) return;
       var col = el("div"); col.appendChild(el("h3", null, g[1])); var ul = el("ul");
@@ -1278,106 +1147,67 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
         fmt(maS[k], 2), fmt(maL[k], 2)]; }).slice(-60).reverse(), "");
   })();
 
-  // ---------------------------------------------------------------- arène
-  (function arenaRows() {
-    document.getElementById("arena-note").textContent = "Chaque stratégie joue 1 000 virtuels dans son propre fantôme et reçoit " +
-      "une part du capital principal quand elle passe le seuil d'entrée. Touchez une ligne pour ses courbes et ses chiffres.";
-    var box = document.getElementById("arena");
-    if (!arena.length) { box.appendChild(el("p", "empty", "Aucune stratégie active.")); return; }
-    var caps = arena.map(function (s) { return s.capital; }).concat([initial]);
-    var span = Math.max(20, Math.max.apply(null, caps.map(function (c) { return Math.abs(c - initial); }))) * 1.1;
-    var maxOps = Math.max.apply(null, arena.map(function (s) { return s.operations; }).concat([1]));
-    var head = el("div", "row th"), arenaRows = [];
-    // Colonnes triables : rang (ordre de l'arène), nom, capital, opérations clôturées.
-    var SORT = { 0: function (r) { return r._s.rang; }, 1: function (r) { return r._s.nom.toLowerCase(); },
-                 3: function (r) { return r._s.capital; }, 4: function (r) { return r._s.operations; } };
-    var arenaSort = { col: 0, dir: 1 }, arenaFold = function () {};
-    ["#", "stratégie", "face à ne rien faire", "capital", "clôt.", "courbe"].forEach(function (h, i) {
-      var c = el("div", ["", "", "c-track", "num c-cap", "num c-ops", "c-spark"][i]);
-      if (SORT[i]) { var b = el("button", "sort", h); b.type = "button"; b.setAttribute("aria-label", "Trier par " + (h === "#" ? "rang" : h));
-        c.appendChild(b); c.setAttribute("aria-sort", i === 0 ? "ascending" : "none");
-        b.addEventListener("click", function () {
-          arenaSort.dir = arenaSort.col === i ? -arenaSort.dir : (i >= 3 ? -1 : 1); arenaSort.col = i;
-          arenaRows.sort(function (x, y) { var a = SORT[i](x), z = SORT[i](y);
-            return (typeof a === "number" ? a - z : String(a).localeCompare(String(z), "fr")) * arenaSort.dir || x._s.rang - y._s.rang; });
-          arenaRows.forEach(function (r) { box.appendChild(r); });
-          box.appendChild(more);
-          Array.prototype.forEach.call(head.children, function (cc, j) { if (SORT[j]) cc.setAttribute("aria-sort",
-            j === i ? (arenaSort.dir > 0 ? "ascending" : "descending") : "none"); });
-          arenaFold(); }); }
-      else c.textContent = h;
-      head.appendChild(c); });
-    box.appendChild(head);
-    var more = el("div", "more-row");
-    arena.forEach(function (s, i) {
-      var row = el("div", "row"); row.appendChild(el("div", "rank", String(i + 1)));
-      // Compact : nom + état, la phrase simple sur deux lignes au plus ; le reste au toucher.
-      var name = el("div", "name", sname(s.nom));
-      var H2 = s.sante || {}, susp = !!H2.suspendue;
-      var chip = el("span", "chip" + (s.champion ? " hi" : s.eliminee || susp || s.retiree ? " off" : ""),
-        s.champion ? "championne" + (s.part_principal ? " · " + fmt(s.part_principal * 100, 0) + " %" : "")
-          : s.eliminee ? "éliminée" : s.retiree ? "retirée" : susp ? "suspendue" : s.doublon ? "doublon" : "en test"); name.appendChild(chip);
-      if (s.explication) name.appendChild(el("span", "explain", s.explication));
-      var info = el("span", "more-info"); name.appendChild(info);
-      info.appendChild(el("span", "sub", s.nom.replace(/^.*_v/, "v") + " · " + s.verdict +
-        (s.confiance_pct !== undefined ? " · confiance " + fmt(s.confiance_pct, 0) + " %"
-          : s.confiance !== undefined ? " · confiance " + fmt(s.confiance, 1) : "") +
-        (s.mode === "recompenses" ? " · jugée sur ses récompenses" : s.mode === "valeur" ? " · jugée sur la valeur de ses positions" : "")));
-      // Doublon (18/10/2026) : qualifiée, mais elle fait surtout les mêmes paris qu'une autre déjà au principal.
-      if (s.doublon && s.doublon.comme) info.appendChild(el("span", "sub", "qualifiée, mais " +
-        (s.doublon.chevauchement != null ? fmt(s.doublon.chevauchement * 100, 0) + " % de ses paris sont" : "elle fait") +
-        " les mêmes que " + sname(s.doublon.comme) + " : une seule place pour les deux (la meilleure)"));
-      // Option A (17/10/2026) : récompenses ESTIMÉES comptées pour le classement, pas dans le capital.
-      if (s.recompenses_classement > 0) info.appendChild(el("span", "sub",
-        "+ " + fmt(s.recompenses_classement, 2) + " de récompenses estimées, comptées pour le classement (pas dans le capital)"));
-      // Santé : mise autorisée, prévisions jugées (avance sur le marché), dérive des prix depuis l'achat.
-      if (s.sante) info.appendChild(el("span", "sub", susp ? H2.suspendue :
-        "mise ×" + fmt(H2.prudence, 2) + " · " + H2.jugees + " prévision(s) jugée(s)" +
-        (H2.avance === null || H2.avance === undefined ? "" : " · avance " + (H2.avance > 0 ? "+" : "") + fmt(H2.avance, 3)) +
-        (H2.derive === null || H2.derive === undefined ? "" : " · dérive " + (H2.derive > 0 ? "▲ +" : H2.derive < 0 ? "▼ " : "") + fmt(H2.derive, 3))));
-      row.appendChild(name);
-      // piste commune : trait central = 1 000 (ne rien faire)
-      var tr = el("div", "c-track"), W = 220, Hh = 28, svg = svgEl("svg", { viewBox: "0 0 " + W + " " + Hh, "aria-hidden": "true" }, tr);
-      var sx = function (v) { return 8 + (v - (initial - span)) / (2 * span) * (W - 16); };
-      svgEl("line", { x1: 8, x2: W - 8, y1: Hh / 2, y2: Hh / 2, stroke: "var(--line)" }, svg);
-      svgEl("line", { x1: sx(initial), x2: sx(initial), y1: 4, y2: Hh - 4, stroke: "var(--faint)" }, svg);
-      var sideCol = s.capital > initial + 0.5 ? "var(--blue)" : s.capital < initial - 0.5 ? "var(--red)" : "var(--ink-2)";
-      svgEl("line", { x1: sx(initial), x2: sx(s.capital), y1: Hh / 2, y2: Hh / 2, stroke: sideCol, "stroke-width": 2, opacity: 0.7 }, svg);
-      var rad = 3.5 + 6 * Math.sqrt(s.operations / maxOps);
-      svgEl("circle", { cx: sx(s.capital), cy: Hh / 2, r: rad, fill: s.eliminee ? "var(--card)" : sideCol,
-        stroke: s.eliminee ? "var(--ink-2)" : "var(--card)", "stroke-width": s.eliminee ? 1.5 : 2 }, svg);
-      row.appendChild(tr);
-      var cap = el("div", "num c-cap", fmt(s.capital, 2)); var g = (s.capital / initial - 1) * 100;
-      var sm = el("small"); sm.appendChild(delta(g, 1, " %")); cap.appendChild(sm); row.appendChild(cap);
-      row.appendChild(el("div", "num c-ops", String(s.operations)));
-      // Téléphone : la courbe prend toute la largeur sous le nom (à la place de la piste).
-      var narrowRow = box.clientWidth < 700, sp = el("div", "c-spark spark-wrap"),
-        sv = spark(s.courbe, narrowRow ? Math.max(200, box.clientWidth - 34) : 104, narrowRow ? 40 : 30);
-      sp.appendChild(sv); row.appendChild(sp);
-      row._s = { rang: i + 1, nom: s.nom, capital: s.capital, operations: s.operations };
-      // Fiche (21/10/2026) : ouverte au premier toucher, calculée à ce moment-là (openFiche).
-      var holder = el("div", "fiche");
-      holder.addEventListener("click", function (ev) { ev.stopPropagation(); });
-      row.appendChild(holder);
-      row.addEventListener("click", function () { row.classList.toggle("open");
-        if (row.classList.contains("open") && !holder._done) { holder._done = true; openFiche(holder, s); } });
-      arenaRows.push(row); box.appendChild(row);
-    });
-    box.appendChild(more);
-    arenaFold = collapsible(more, function () { return arenaRows; }, 6, "stratégies");
+  // ---------------------------------------------------------------- la stratégie
+  // Ce qu'elle fait (config/strategies.yaml), ses indices de confiance (confiance.py, sur les paris terminés du
+  // capital principal), ce qu'elle a vu au dernier cycle, et ses courbes calculées à la demande (fiche).
+  (function strategyBlock() {
+    var names = STRATS.map(function (s) { return s.nom; });
+    document.getElementById("st-kicker").textContent = names.length ? names.join(" · ") : "aucune stratégie active";
+    document.getElementById("st-explain").textContent = STRATS.map(function (s) { return s.explication; }).filter(Boolean).join(" ");
+    document.getElementById("st-verdict").textContent = (CONF.operations
+      ? "Verdict : " + CONF.verdict + ". Confiance = chance, d'après les paris déjà terminés, que la stratégie gagne vraiment " +
+        "plus que ses prix ne l'annoncent. Elle a été choisie parmi des dizaines de cousines : même à 90 %, une part peut venir de la chance."
+      : "Aucun pari terminé pour l'instant : la confiance se mesurera sur les premiers paris réglés.") +
+      (CONF.anterieures ? " Ses " + CONF.anterieures + " paris terminés dans son ancien fantôme (jusqu'au " + short(CONF.antecedents_fin) +
+        " UTC) comptent dans ces chiffres et dans le calcul de sa mise, comme si le fantôme continuait. Le capital, lui, part de 1 000 €." : "");
+    var stats = document.getElementById("st-stats");
+    function tile(k, v, sub, mainT) { var tt = el("div", "stat" + (mainT ? " main" : "")); tt.appendChild(el("div", "k", k));
+      var vv = el("div", "v"); if (v instanceof Node) vv.appendChild(v); else vv.textContent = v; tt.appendChild(vv);
+      var sb = el("div", "s"); (sub || []).forEach(function (x) { sb.appendChild(x instanceof Node ? x : document.createTextNode(x)); });
+      tt.appendChild(sb); stats.appendChild(tt); }
+    tile("Confiance", CONF.operations ? fmt(CONF.confiance_pct, 0) + " %" : "—",
+      [CONF.operations ? "score t " + fmt(CONF.score_t, 2) + " · par jour " + fmt(CONF.confiance_jour_pct, 0) + " %" : "pas encore de pari terminé"], true);
+    tile("Paris terminés", fmt(CONF.operations || 0, 0), [fmt(CONF.evenements || 0, 0) + " matchs ou événements" +
+      (CONF.anterieures ? " · dont " + CONF.anterieures + " dans l'ancien fantôme" : "")]);
+    tile("Gagnés / attendus", CONF.operations ? CONF.gagnees + " / " + fmt(CONF.attendues, 1) : "—",
+      CONF.operations ? [delta(CONF.en_plus, 1, ""), " d'après les prix payés"] : []);
+    tile("Résultat", CONF.operations ? delta(CONF.resultat, 2) : "—", [CONF.operations ? "sur " + fmt(CONF.mise_totale, 2) + " misés" : ""]);
+    tile("Rendement par euro", CONF.rendement_par_euro === null || CONF.rendement_par_euro === undefined ? "—"
+      : delta(CONF.rendement_par_euro * 100, 1, " %"), ["résultat ÷ mises"]);
+    tile("Intervalle à 90 %", CONF.ic90 ? fmt(CONF.ic90[0] * 100, 1) + " à " + fmt(CONF.ic90[1] * 100, 1) + " %" : "—",
+      ["rendement moyen par pari, par match"]);
+    var SA = ST.sante || null;  // mise aux règles de l'ancien fantôme (sante.py), calculée à chaque cycle
+    tile("Mise", SA ? (SA.suspendue ? "suspendue" : fmt(SA.facteur, 2) + " × Kelly") : "—",
+      SA ? [SA.suspendue ? SA.suspendue : "prudence " + fmt(SA.prudence, 2) + " · renfort " + fmt(SA.renfort, 2) + " · " +
+        SA.jugees + " prévisions jugées"] : ["calculée au prochain cycle"]);
+    var rg = document.getElementById("st-reglages");
+    STRATS.forEach(function (s) { (s.reglages || []).forEach(function (r) { rg.appendChild(el("span", "pill", r)); }); });
+    // Abstentions du dernier cycle : marchés vus, propositions, raisons les plus fréquentes.
+    var A = ST.abstentions || {}, rows = [];
+    Object.keys(A).forEach(function (sid) { var a = A[sid] || {}, R = a.raisons || {};
+      rows.push(["marchés vus", fmt(a.marches || 0, 0)], ["achats immédiats proposés", fmt(a.propositions || 0, 0)],
+        ["ordres à poser", fmt(a.ordres || 0, 0)]);
+      Object.keys(R).forEach(function (r) { rows.push([r, fmt(R[r], 0)]); }); });
+    document.getElementById("st-abst-sum").textContent = "Ce qu'elle a vu au dernier cycle" +
+      (Object.keys(A).length ? "" : " (pas encore de cycle)");
+    table("st-abst", [{ t: "raison", q: 1 }, { t: "marchés", n: 1 }], rows, "Pas encore de cycle enregistré.", 10);
+    var btn = document.getElementById("st-open"), holder = document.getElementById("st-fiche");
+    btn.addEventListener("click", function () {
+      holder.hidden = !holder.hidden; btn.setAttribute("aria-expanded", holder.hidden ? "false" : "true");
+      if (!holder.hidden && !holder._done) { holder._done = true; openFiche(holder, { nom: names[0] || "la stratégie" }); } });
   })();
 
-  // ---------------------------------------------------------------- fiche d'une stratégie
-  // Demande d'Etienne (21/10/2026) : toucher une stratégie de l'arène ouvre ses courbes (capital, par
-  // pari, confiance, mise, par jour) avec plus haut, plus bas, tendances. Tout est calculé À CE
-  // MOMENT, dans le navigateur, à partir du journal public de la stratégie (branche data) : rien
-  // n'est précalculé par le cycle. Les noms de marchés restent du texte (textContent).
+  // ---------------------------------------------------------------- courbes de la stratégie (fiche)
+  // Demande d'Etienne (21/10/2026) : les courbes de la stratégie (capital, par pari, confiance, par jour)
+  // avec plus haut, plus bas, tendances. Tout est calculé À CE MOMENT, dans le navigateur, à partir du
+  // journal public du capital principal (branche data) : rien n'est précalculé par le cycle. Les noms
+  // de marchés restent du texte (textContent).
   var FICHE = D.fiche || {};
-  function journalUrl(name) {
+  function journalUrl() {
     var base = FICHE.journaux;
     if (!base) { var m = /^([^.]+)\.github\.io$/.exec(location.hostname), repo = location.pathname.split("/").filter(Boolean)[0];
-      base = m && repo ? "https://raw.githubusercontent.com/" + m[1] + "/" + repo + "/data/ledger/fantome/" : ""; }
-    return base ? base + encodeURIComponent(name) + ".jsonl" : "";
+      base = m && repo ? "https://raw.githubusercontent.com/" + m[1] + "/" + repo + "/data/ledger/" : ""; }
+    return base ? base + "ledger.jsonl" : "";
   }
   // Même reconstruction que reporting.closed_trades (Python) : une opération se ferme quand toutes
   // ses parts sont vendues ou réglées ; une remise à zéro (RESET) repart de rien.
@@ -1402,30 +1232,25 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
     return { cap0: cap0, start: start, beats: beats, trades: trades,
              open: Object.keys(open).map(function (k) { return open[k]; }) };
   }
-  // Loi normale (Abramowitz et Stegun 7.1.26), comme arena.confidence_percent et day_confidence.
+  // Loi normale (Abramowitz et Stegun 7.1.26), comme confiance.confidence_percent et day_confidence.
   function phi(z) { var a = Math.abs(z) / Math.SQRT2, k = 1 / (1 + 0.3275911 * a);
     var y = 1 - ((((1.061405429 * k - 1.453152027) * k + 1.421413741) * k - 0.284496736) * k + 0.254829592) * k * Math.exp(-a * a);
     return 0.5 * (1 + (z >= 0 ? y : -y)); }
   // Après chaque opération : capital réalisé, paris gagnés contre attendus, confiance (score t et par
-  // jour), mise sur l'avantage mesuré (mêmes formules que arena.py).
+  // jour), mêmes formules que confiance.py.
   function perTrade(J) {
-    var rule = FICHE.mise || {}, K = Number(rule.paris_fictifs || 30), pmin = Number(rule.part_min || 0),
-      pmax = Number(rule.part_max === undefined ? 1 : rule.part_max), assumed0 = Number(rule.avantage_suppose_defaut || 0.035);
-    var cum = 0, wins = 0, expct = 0, n = 0, mean = 0, m2 = 0, varModel = 0, days = {}, sumsq = 0, asum = 0, an = 0, out = [];
+    var cum = 0, wins = 0, expct = 0, n = 0, mean = 0, m2 = 0, varModel = 0, days = {}, sumsq = 0, out = [];
     J.trades.forEach(function (t) {
       var p = t.price, won = t.pnl > 0, r = t.pnl / t.cost, pc = Math.min(Math.max(p, 0.01), 0.99);
       n++; cum += t.pnl; wins += won ? 1 : 0; expct += p;
       var dm = r - mean; mean += dm / n; m2 += dm * (r - mean);
       var day = new Date(t.close).toISOString().slice(0, 10), old = days[day] || 0, nw = old + (won ? 1 : 0) - pc;
       days[day] = nw; sumsq += nw * nw - old * old; varModel += pc * (1 - pc);
-      if (t.est !== null) { asum += t.est - p; an++; }
       var sd = n > 1 ? Math.sqrt(m2 / (n - 1)) : 0, tt = n < 2 ? 0 : sd > 0 ? mean / (sd / Math.sqrt(n)) : (mean > 0 ? 99 : 0);
       var v = Math.max(varModel, sumsq), excess = wins - expct, zs = 0;
       Object.keys(days).forEach(function (k2) { zs += days[k2]; });
-      var assumed = an && asum / an > 0 ? asum / an : assumed0;
       out.push({ t: t, n: n, real: J.cap0 + cum, wins: wins, expct: expct, excess: excess,
-        conf: phi(tt) * 100, confDay: v > 0 ? phi(zs / Math.sqrt(v)) * 100 : 50,
-        stake: Math.min(pmax, Math.max(pmin, excess / (n + K) / Math.max(assumed, 0.005))) * 100 }); });
+        conf: phi(tt) * 100, confDay: v > 0 ? phi(zs / Math.sqrt(v)) * 100 : 50 }); });
     return out;
   }
 
@@ -1513,8 +1338,8 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
     out.push(pts[pts.length - 1]); return out; }
 
   function openFiche(holder, s) {
-    var url = journalUrl(s.nom);
-    holder.appendChild(el("p", "note", "Chargement du journal de " + sname(s.nom) + "…"));
+    var url = journalUrl();
+    holder.appendChild(el("p", "note", "Chargement du journal du capital principal…"));
     if (!url) { holder.textContent = ""; holder.appendChild(el("p", "empty", "Adresse du journal inconnue (config/dashboard.yaml → journaux_url).")); return; }
     var t0 = Date.now();
     fetch(url, { cache: "no-cache" }).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
@@ -1561,7 +1386,6 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
       tile("Pire pari", sgn(worst.pnl, 2), [String(worst.outcome || "").slice(0, 28)]);
       tile("Prix payé moyen", fmt(trades.reduce(function (a, t) { return a + t.price; }, 0) / trades.length, 3), ["chance annoncée par le marché"]);
       tile("Confiance", fmt(last.conf, 0) + " %", ["par jour " + fmt(last.confDay, 0) + " %"]);
-      tile("Mise du principal", fmt(last.stake, 0) + " %", ["de sa mise, sur l'avantage mesuré"]);
       tile("Durée d'un pari", hold < 48 ? fmt(hold, 1) + " h" : fmt(hold / 24, 1) + " j", ["frais payés " + eur(trades.reduce(function (a, t) { return a + t.fees; }, 0))]);
     }
     tile("En cours", String(J.open.length), ["positions ouvertes · " + (J.beats.length ? "liquidités " + eur(J.beats[J.beats.length - 1][2]) : "")]);
@@ -1620,26 +1444,14 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
           series: [{ label: "en plus de l'attendu", color: "var(--ink)", pts: P.map(function (p) { return [p.n, p.excess]; }) }] });
       },
       "Confiance": function () {
-        var g = FICHE.garde_fou || {};
         legendOf(legend, [["confiance (score t)", "var(--ink)"], ["confiance par jour", "var(--trend-long)", "5 4"]]);
         note.textContent = "Confiance : chance, d'après les paris déjà faits, que la stratégie gagne vraiment plus que ses prix. " +
-          "Score t : pari par pari. Par jour : journée par journée (une seule belle journée ne dépasse jamais ≈ 84 %)." +
-          (g.confiance_min ? " Sous " + fmt(g.confiance_min * 100, 0) + " % par jour, la part du principal est divisée par deux." : "");
+          "Score t : pari par pari. Par jour : journée par journée (une seule belle journée ne dépasse jamais ≈ 84 %).";
         ficheChart(chartBox, { label: "Confiance après chaque pari", fx: fxBet, fy: function (v) { return fmt(v, 0) + " %"; }, extra: betExtra,
           yMin: 0, yMax: 100, clampLo: 0, clampHi: 100, empty: "Aucun pari terminé pour l'instant.",
-          refs: [{ y: 50, label: "50 % (pile ou face)" }].concat(g.confiance_min ? [{ y: g.confiance_min * 100, label: "garde-fou " + fmt(g.confiance_min * 100, 0) + " %" }] : []),
+          refs: [{ y: 50, label: "50 % (pile ou face)" }],
           series: [{ label: "score t", color: "var(--ink)", pts: P.map(function (p) { return [p.n, p.conf]; }) },
             { label: "par jour", color: "var(--trend-long)", dash: "5 4", pts: P.map(function (p) { return [p.n, p.confDay]; }), end: "jour" }] });
-      },
-      "Mise": function () {
-        var r = FICHE.mise || {};
-        legendOf(legend, [["part de sa mise copiée par le principal", "var(--ink)"]]);
-        note.textContent = "Mise sur l'avantage mesuré : le principal copie chaque pari à (avantage mesuré ÷ avantage supposé) de sa " +
-          "mise" + (r.paris_fictifs !== undefined ? ", l'avantage mesuré étant ramené vers 0 par " + r.paris_fictifs + " paris fictifs" : "") +
-          ". 100 % = la stratégie a prouvé l'avantage qu'elle croit avoir. Le fantôme, lui, mise toujours normalement.";
-        ficheChart(chartBox, { label: "Part de la mise copiée", fx: fxBet, fy: function (v) { return fmt(v, 0) + " %"; }, extra: betExtra,
-          yMin: 0, yMax: 100, clampLo: 0, empty: "Aucun pari terminé pour l'instant.",
-          series: [{ label: "mise", color: "var(--ink)", pts: P.map(function (p) { return [p.n, p.stake]; }) }] });
       },
       "Par jour": function () {
         legend.textContent = ""; chartBox.textContent = "";
@@ -1692,105 +1504,10 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
         var c2 = el("td", "n"); c2.appendChild(delta(t.pnl, 2)); r2.appendChild(c2); b2.appendChild(r2); });
       var sc2 = el("div", "scroll"); sc2.appendChild(t2); det.appendChild(sc2); holder.appendChild(det);
     }
-    holder.appendChild(el("p", "note", "Calculé à l'instant dans votre navigateur, à partir du journal public de la stratégie (" +
-      J.beats.length + " battements, " + trades.length + " paris terminés, " + fmt(ms / 1000, 1) + " s). Le fantôme joue 1 000 virtuels ; " +
-      "le capital principal n'en copie qu'une part."));
+    holder.appendChild(el("p", "note", "Calculé à l'instant dans votre navigateur, à partir du journal public du capital principal (" +
+      J.beats.length + " battements, " + trades.length + " paris terminés, " + fmt(ms / 1000, 1) + " s). Les paris de l'ancien " +
+      "fantôme ne sont pas dans ces courbes ; ils comptent dans les chiffres de confiance au-dessus."));
   }
-
-  // Classement dans le temps : une ligne par stratégie (rang 1 en haut). En tête aujourd'hui en
-  // blanc, les autres en gris ; survol = la ligne la plus proche, son nom, son rang, son capital.
-  (function arenaHistory() {
-    var Hs = D.historique_arene || {}, dates = Hs.dates || [], names = Object.keys(Hs.strategies || {});
-    var box = document.getElementById("arena-hist");
-    if (dates.length < 2 || !names.length) {
-      box.appendChild(el("p", "empty", "Pas encore assez de photos du classement (une par heure).")); return; }
-    var lead = arena.length ? arena[0].nom : names[0];
-    // Lisible même avec 30 stratégies : seules les 10 premières d'aujourd'hui sont tracées ; un rang
-    // au-delà de 10 est posé sur la dernière ligne « 11+ ».
-    var TOP = 10, last = function (n) { var rs = Hs.strategies[n], i = rs.length - 1; while (i >= 0 && !rs[i]) i--; return i < 0 ? null : rs[i]; };
-    names = names.filter(function (n) { var r = last(n); return n === lead || (r !== null && r <= TOP); });
-    var clampRank = function (r) { return r ? Math.min(r, TOP + 1) : r; };
-    var maxRank = 1; names.forEach(function (n) { Hs.strategies[n].forEach(function (r) { if (r && clampRank(r) > maxRank) maxRank = clampRank(r); }); });
-    var W = Math.max(300, Math.round(box.clientWidth)), narrow = W < 600, Hh = Math.max(160, Math.min(320, 26 * maxRank + 40));
-    var L = 30, R = narrow ? 12 : 150, T = 12, B = 26;
-    var sx = function (i) { return L + i / (dates.length - 1) * (W - L - R); };
-    var sy = function (r) { return T + (maxRank === 1 ? 0.5 : (r - 1) / (maxRank - 1)) * (Hh - T - B); };
-    var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + Hh, role: "img", tabindex: "0",
-      "aria-label": "Classement de l'arène sur " + dates.length + " photos ; en tête : " + lead }, box);
-    for (var r = 1; r <= maxRank; r++) {
-      svgEl("line", { x1: L, x2: W - R, y1: sy(r), y2: sy(r), stroke: "var(--line)", "stroke-dasharray": r === 1 ? "" : "2 4" }, svg);
-      svgEl("text", { x: L - 8, y: sy(r) + 3, "text-anchor": "end", "font-size": 10, fill: "var(--muted)" }, svg,
-        r > TOP ? (TOP + 1) + "+" : String(r)); }
-    [0, dates.length - 1].forEach(function (i) {
-      svgEl("text", { x: sx(i), y: Hh - 6, "text-anchor": i ? "end" : "start", "font-size": 10, fill: "var(--muted)" }, svg, short(dates[i])); });
-    function path(n) { var d = "", pen = false;
-      Hs.strategies[n].forEach(function (rk, i) { if (!rk) { pen = false; return; }
-        d += (pen ? "L" : "M") + sx(i).toFixed(1) + " " + sy(clampRank(rk)).toFixed(1); pen = true; }); return d; }
-    var order = names.filter(function (n) { return n !== lead; }).concat(names.indexOf(lead) >= 0 ? [lead] : []);
-    var paths = {};
-    order.forEach(function (n) { var hi = n === lead;
-      paths[n] = svgEl("path", { d: path(n), fill: "none", stroke: hi ? "var(--blue)" : "var(--dot-lo)",
-        "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg); });
-    // Fin de chaque ligne : un point ; noms en clair pour les trois premiers (écran large).
-    names.forEach(function (n) { var rs = Hs.strategies[n], i = rs.length - 1; while (i >= 0 && !rs[i]) i--;
-      if (i < 0) return; var hi = n === lead;
-      svgEl("circle", { cx: sx(i), cy: sy(clampRank(rs[i])), r: hi ? 4.5 : 3, fill: hi ? "var(--blue)" : "var(--dot-mid)",
-        stroke: "var(--card)", "stroke-width": 2 }, svg);
-      if (!narrow && i === rs.length - 1 && rs[i] <= 3)
-        svgEl("text", { x: sx(i) + 10, y: sy(rs[i]) + 3, "font-size": 10.5, fill: hi ? "var(--ink)" : "var(--ink-2)" },
-          svg, n.replace(/_v[\d.]+$/, "").slice(0, 20)); });
-    var tip = tooltip(box), cur = { i: dates.length - 1, n: lead };
-    function show() { var i = cur.i, n = cur.n, rk = Hs.strategies[n][i], k = svg.getBoundingClientRect().width / W;
-      var y = sy(clampRank(rk) || 1);
-      Object.keys(paths).forEach(function (m) { paths[m].setAttribute("stroke", m === n ? "var(--blue)" : "var(--dot-lo)");
-        paths[m].setAttribute("stroke-width", m === n ? 2.5 : 2); });
-      paths[n].parentNode.appendChild(paths[n]);
-      tip.show(sx(i) * k, y * k, n.replace(/_v[\d.]+$/, "") + (rk ? " · n°" + rk : ""),
-        short(dates[i]) + " · capital " + fmt((Hs.capital[n] || [])[i], 2)); }
-    function reset() { tip.hide(); Object.keys(paths).forEach(function (m) {
-      paths[m].setAttribute("stroke", m === lead ? "var(--blue)" : "var(--dot-lo)"); paths[m].setAttribute("stroke-width", 2); });
-      if (paths[lead]) paths[lead].parentNode.appendChild(paths[lead]); }
-    svg.addEventListener("pointermove", function (ev) { var b = svg.getBoundingClientRect(), X = (ev.clientX - b.left) / b.width * W,
-      Y = (ev.clientY - b.top) / b.width * W, i = Math.max(0, Math.min(dates.length - 1, Math.round((X - L) / (W - L - R) * (dates.length - 1))));
-      var best = null, dist = 1e9; names.forEach(function (n) { var rk = Hs.strategies[n][i];
-        if (rk && Math.abs(sy(clampRank(rk)) - Y) < dist) { dist = Math.abs(sy(clampRank(rk)) - Y); best = n; } });
-      if (best) { cur = { i: i, n: best }; show(); } });
-    svg.addEventListener("pointerleave", reset);
-    svg.addEventListener("focus", show); svg.addEventListener("blur", reset);
-    svg.addEventListener("keydown", function (e) { var ranked = names.filter(function (n) { return Hs.strategies[n][cur.i]; })
-        .sort(function (a, b) { return Hs.strategies[a][cur.i] - Hs.strategies[b][cur.i]; }), j = ranked.indexOf(cur.n);
-      if (e.key === "ArrowLeft") cur.i = Math.max(0, cur.i - 1); else if (e.key === "ArrowRight") cur.i = Math.min(dates.length - 1, cur.i + 1);
-      else if (e.key === "ArrowUp" && j > 0) cur.n = ranked[j - 1]; else if (e.key === "ArrowDown" && j < ranked.length - 1) cur.n = ranked[j + 1];
-      else return; e.preventDefault(); if (!Hs.strategies[cur.n][cur.i]) cur.n = ranked[0] || cur.n; show(); });
-    // Vue tableau : la dernière photo de chaque jour.
-    var rows = [], seen = {};
-    for (var i = dates.length - 1; i >= 0; i--) { var day = dates[i].slice(0, 10); if (seen[day] && i !== dates.length - 1) continue; seen[day] = 1;
-      var ranked = names.filter(function (n) { return Hs.strategies[n][i]; })
-        .sort(function (a, b) { return Hs.strategies[a][i] - Hs.strategies[b][i]; });
-      rows.push([short(dates[i]), ranked.slice(0, 5).map(function (n, k) { return (k + 1) + ". " + n.replace(/_v[\d.]+$/, ""); }).join(" · ")]); }
-    table("arena-hist-table", [{ t: "photo", d: 1 }, { t: "classement (5 premiers)", q: 1 }], rows, "—");
-  })();
-  // Petite courbe d'une stratégie : bleue si elle est au-dessus de son départ, rouge en dessous ;
-  // trait pointillé = « ne rien faire ».
-  function spark(curve, w, h) {
-    w = w || 104; h = h || 30;
-    var svg = svgEl("svg", { viewBox: "0 0 " + w + " " + h, "aria-hidden": "true" });
-    if (!curve || curve.length < 2) return el("span", "flat", "—");
-    var ys = curve.map(function (p) { return p[1]; }), lo = Math.min.apply(null, ys.concat([initial])), hi = Math.max.apply(null, ys.concat([initial]));
-    if (hi === lo) { hi += 1; lo -= 1; }
-    var X = function (i) { return i / (curve.length - 1) * (w - 8) + 2; }, Y = function (v) { return (hi - v) / (hi - lo) * (h - 8) + 4; };
-    var lastV = ys[ys.length - 1], col = lastV > initial + 0.5 ? "var(--blue)" : lastV < initial - 0.5 ? "var(--red)" : "var(--ink-2)";
-    var soft = lastV > initial + 0.5 ? "var(--blue-soft)" : lastV < initial - 0.5 ? "var(--red-soft)" : "var(--wash)";
-    svgEl("line", { x1: 2, x2: w - 6, y1: Y(initial), y2: Y(initial), stroke: "var(--line-2)", "stroke-dasharray": "2 3" }, svg);
-    var d = curve.map(function (p, i) { return (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(p[1]).toFixed(1); }).join(" ");
-    svgEl("path", { d: d + " L" + X(curve.length - 1).toFixed(1) + " " + Y(initial).toFixed(1) + " L" + X(0).toFixed(1) + " " +
-      Y(initial).toFixed(1) + " Z", fill: soft, stroke: "none" }, svg);
-    svgEl("path", { d: d, fill: "none", stroke: col, "stroke-width": 1.6, "stroke-linejoin": "round",
-      "stroke-linecap": "round" }, svg);
-    svgEl("circle", { cx: X(curve.length - 1), cy: Y(lastV), r: 2.8, fill: col }, svg);
-    return svg;
-  }
-
 
   // ---------------------------------------------------------------- positions
   function forecast(p) {
@@ -1807,7 +1524,7 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
     return box;
   }
   // ---------------------------------------------------------------- ordres du capital principal
-  // Le vrai portefeuille (règle n°1) a son propre bloc, avant tout ce qui concerne l'arène.
+  // Le seul portefeuille (règle n°1) : ses exécutions, ses ordres posés et ses opérations clôturées.
   (function mainOrders() {
     var O = D.ordres_principal || { executions: [], poses: [], clotures: [], compte: {} }, K = O.compte || {};
     var pbox = document.getElementById("pr-pills");
@@ -1833,77 +1550,22 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
       (O.poses || []).map(function (o) { var m = el("span", null, o.marche); m.appendChild(el("span", "detail", o.issue + " · " + o.strategie));
         return [short(o.date), m, o.sens, fmt(o.prix, 3), fmt(o.parts, 2)]; }), "Aucun ordre posé en attente.");
     var cl = O.clotures || [];
-    document.getElementById("pr-closed-sum").textContent = "Opérations clôturées du principal (" + cl.length +
+    document.getElementById("pr-closed-sum").textContent = "Opérations clôturées (" + cl.length +
       (cl.length ? ", " + cl.filter(function (t) { return t.resultat > 0; }).length + " gagnées" : "") + ")";
     table("pr-closed", [{ t: "date", d: 1 }, { t: "marché", q: 1 }, { t: "résultat", n: 1 }],
       cl.map(function (t) { var m = el("span", null, t.marche); m.appendChild(el("span", "detail", t.issue + " · " + t.strategie));
         return [short(t.date), m, delta(t.resultat, 2)]; }), "Aucune opération clôturée.");
   })();
 
-  // Le capital principal d'abord ; les positions des fantômes (souvent des centaines) dans un dépliant.
-  function posRow(p, who) { var m = el("span", null, p.marche); m.appendChild(el("span", "detail", (who ? who + " · " : "") +
+  function posRow(p) { var m = el("span", null, p.marche); m.appendChild(el("span", "detail",
       "issue : " + p.issue + " · " + p.strategie + " · ouverte " + short(p.ouverte)));
     return [m, fmt(p.cout, 2), p.latent === null ? "—" : delta(p.latent, 2), forecast(p)]; }
-  var POS_HEAD = [{ t: "marché", q: 1 }, { t: "coût", n: 1 }, { t: "latent", n: 1 }, { t: "prévision et prix", s: 1 }];
-  var posMain = (D.positions || []).filter(function (p) { return p.portefeuille === "principal"; }),
-    posArena = (D.positions || []).filter(function (p) { return p.portefeuille !== "principal"; });
-  table("positions-t", POS_HEAD, posMain.map(function (p) { return posRow(p); }), "Aucune position ouverte pour le capital principal.", 6);
-  document.getElementById("positions-arena-sum").textContent = "Positions des stratégies de l'arène (" + posArena.length + ")";
-  table("positions-arena", POS_HEAD, posArena.map(function (p) { return posRow(p, sname(p.portefeuille)); }), "Aucune.", 6);
-
-  // Entonnoir 80/20 (20/10/2026) : pour chaque stratégie qui grandit, le petit morceau qui fait ses gains.
-  (function paretoBlock() {
-    var P = D.pareto || [], box = document.getElementById("pareto");
-    if (!box || !P.length) return;
-    var NAMES = { prix: "prix payé", delai: "délai jusqu'à la fin", issue: "issue", heure_utc: "heure d'achat",
-      discipline: "discipline", type_pari: "type de pari", mode: "mode d'achat", source: "source de résolution" };
-    var wrap = el("div", "funnel-group"); wrap.appendChild(el("h3", null, "Ce qui fait les gains (règle des 80/20)"));
-    var holder = el("div", "today"), ul = el("ul"); holder.appendChild(ul); wrap.appendChild(holder); box.appendChild(wrap);
-    P.forEach(function (r) {
-      var li = el("li"), c = r.coeur;
-      li.appendChild(el("b", null, sname(r.strategie)));
-      li.appendChild(document.createTextNode(" (" + (r.croissance >= 0 ? "+" : "") + fmt(r.croissance * 100, 1) + " % sur " +
-        r.operations + " opérations) : " + (c ? fmt(c.part_des_paris * 100, 0) + " % des paris font " +
-        fmt(c.part_des_gains * 100, 0) + " % des gains → " + (NAMES[c.caracteristique] || c.caracteristique) + " « " +
-        c.morceaux.join(", ") + " »." : "gains encore trop dispersés.")));
-      var todo = (r.filles || []).filter(function (f) { return !f.existe; });
-      if (todo.length) li.appendChild(el("span", "detail", " Filles à créer : " + todo.map(function (f) {
-        return f.morceau + " (" + f.n + " op., " + (f.pnl >= 0 ? "+" : "") + fmt(f.pnl, 0) + ")"; }).join(" ; ")));
-      ul.appendChild(li);
-    });
-  })();
-
-  // ---------------------------------------------------------------- entonnoir (mères et filles)
-  (function funnelBlock() {
-    var F = D.entonnoir || [], box = document.getElementById("funnel");
-    if (!F.length) { box.appendChild(el("p", "empty", "Pas encore de stratégie découpée.")); return; }
-    var initial = D.capital_initial || 1000;
-    F.forEach(function (g, k) {
-      var wrap = el("div", "funnel-group"); wrap.appendChild(el("h3", null, "Mère : " + sname(g.mere.nom)));
-      var sc = el("div", "scroll"), t = el("table"); t.id = "funnel-t" + k; sc.appendChild(t); wrap.appendChild(sc); box.appendChild(wrap);
-      var mg = (g.mere.capital / initial - 1) * 100;
-      function cap(c, g) { var b = el("span", null, fmt(c, 2)); var d = el("span", "detail"); d.appendChild(delta(g, 1, " %"));
-        b.appendChild(d); return b; }
-      // Seules les filles qui ont déjà joué, la meilleure d'abord ; les autres sont seulement comptées.
-      var played = g.filles.filter(function (f) { return f.operations > 0; })
-        .sort(function (a, b) { return (b.ecart || 0) - (a.ecart || 0); }), idle = g.filles.length - played.length;
-      if (idle) wrap.appendChild(el("p", "detail", idle + " fille(s) n'ont pas encore clôturé d'opération."));
-      var rows = [[el("span", null, "la mère (tout)"), cap(g.mere.capital, mg), "—", String(g.mere.operations)]]
-        .concat(played.map(function (f) { var fg = (f.capital / initial - 1) * 100, who = el("span", null, f.morceau);
-          who.appendChild(el("span", "detail", sname(f.nom)));
-          var gap = el("span"); gap.appendChild(delta(f.ecart, 1, " pt"));
-          gap.appendChild(el("span", "detail", "mère : " + (f.mere_depuis >= 0 ? "+" : "") + fmt(f.mere_depuis, 1) + " % pendant ce temps"));
-          return [who, cap(f.capital, fg), gap, String(f.operations)]; }));
-      table(t.id, [{ t: "morceau" }, { t: "capital", n: 1 }, { t: "contre la mère", n: 1 }, { t: "opér.", n: 1 }], rows, "—", 4);
-    });
-  })();
+  table("positions-t", [{ t: "marché", q: 1 }, { t: "coût", n: 1 }, { t: "latent", n: 1 }, { t: "prévision et prix", s: 1 }],
+    (D.positions || []).map(posRow), "Aucune position ouverte.", 6);
 
   // ---------------------------------------------------------------- ordres posés
   (function restingOrders() {
-    var O = D.ordres_poses || {}, R = O.recompenses || {}, M = O.markout || {};
-    table("rewards-t", [{ t: "portefeuille" }, { t: "estimé 7 j ($)", n: 1 }, { t: "versable ($)", n: 1 }, { t: "jours", n: 1 }],
-      Object.keys(R).sort().map(function (p) { return [sname(p), fmt(R[p].estime, 2), fmt(R[p].versable, 2), R[p].jours]; }),
-      "Aucune récompense estimée pour l'instant (aucun ordre posé sur un marché récompensé).");
+    var M = (D.ordres_poses || {}).markout || {};
     var H = ["1 h", "24 h", "résolution"];
     function pair(a, b) {  // servis (en haut) et manqués (en dessous, en gris)
       var box = el("span");
@@ -1913,18 +1575,18 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
         return ln; }
       box.appendChild(line(a, null)); box.appendChild(line(b, "detail")); return box; }
     var rows = Object.keys(M).sort().map(function (p) {
-      var who = el("span", null, sname(p));
+      var who = el("span", null, "servis / manqués");
       who.appendChild(el("span", "detail", M[p].servis.executions + " servis · " + M[p].manques.ordres + " manqués"));
       return [who].concat(H.map(function (h) { return pair(M[p].servis[h], M[p].manques[h]); }));
     });
-    table("markout-t", [{ t: "portefeuille" }].concat(H.map(function (h) { return { t: h, n: 1 }; })), rows,
+    table("markout-t", [{ t: "ordres" }].concat(H.map(function (h) { return { t: h, n: 1 }; })), rows,
       "Pas encore d'ordre posé à mesurer.");
   })();
 
   // ---------------------------------------------------------------- journal
   table("closed", [{ t: "date", d: 1 }, { t: "marché", q: 1 }, { t: "résultat", n: 1 }],
     (D.cloturees || []).map(function (t) { var m = el("span", null, t.marche);
-      m.appendChild(el("span", "detail", t.issue + " · " + t.strategie + " · " + t.portefeuille.replace(/_v[\d.]+$/, "")));
+      m.appendChild(el("span", "detail", t.issue + " · " + t.strategie));
       return [short(t.date), m, delta(t.resultat, 2)]; }), "Aucune opération clôturée.");
   table("watched", [{ t: "marché", q: 1 }, { t: "catégorie" }, { t: "achat / vente", n: 1 }],
     (D.surveilles || []).map(function (m) { return [m.marche, m.categorie, fmt(m.bid, 3) + " / " + fmt(m.ask, 3)]; }),
@@ -1936,37 +1598,15 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
         : state("rejetée", "down"), d.raisons.length ? d.raisons.join(" ; ") : "—"]; }), "Aucune décision enregistrée.");
 
   // ---------------------------------------------------------------- système
-  (function sources() {
-    var S = D.sources, names = Object.keys(Object.assign({}, S.dernier_passage, S.etat)).sort();
-    var obs = S.observations_24h || {}, max = Math.max.apply(null, Object.keys(obs).map(function (k) { return obs[k]; }).concat([1]));
-    table("sources", [{ t: "source" }, { t: "état", s: 1 }, { t: "obs.", n: 1 }], names.map(function (n) {
-      var s = S.etat[n] || "inconnu", kind = /^ok/.test(s) ? "" : /indisponible|échec|erreur/.test(s) ? "down" :
-        /compte requis|désactiv|pas encore/.test(s) ? "idle" : "wait";
-      var cell = el("span"); cell.appendChild(state(n, kind));
-      cell.appendChild(el("span", "detail", "passage " + short(S.dernier_passage[n])));
-      var o = el("span"), v = obs[n] || 0, b = svgEl("svg", { width: 22, height: 14, viewBox: "0 0 22 14", "aria-hidden": "true" }, o);
-      svgEl("circle", { cx: 11, cy: 7, r: v ? 2 + 5 * Math.sqrt(v / max) : 1.5, fill: v ? "var(--ink-2)" : "var(--dot-lo)" }, b);
-      b.style.verticalAlign = "middle"; b.style.marginRight = "6px"; o.appendChild(document.createTextNode(String(v)));
-      return [cell, withDetail(s), o]; }), "Aucune source n'a encore été interrogée.");
-  })();
   var hbox = document.getElementById("health");
   hbox.appendChild(state(C.faillite ? "faillite : arrêt définitif" : alive ? "en vie" : "silencieux " + ago(beatMin),
     C.faillite || !alive ? "down" : ""));
   hbox.appendChild(el("p", "note", "Dernier cycle " + (lastCycle.date ? short(lastCycle.date) + " UTC (" + lastCycle.statut + ")" : "—") +
     " · " + cyclesOk + "/" + cyclesAll + " réussis sur 24 h."));
   (H.erreurs || []).forEach(function (e) { hbox.appendChild(el("p", "detail", short(e.date) + " — " + e.erreur)); });
-  var co = document.getElementById("costs"), T = D.tests; co.style.marginTop = "14px";
-  co.appendChild(T ? state(T.passed + " tests réussis, " + T.failed + " échoués", T.failed ? "down" : "")
-    : state("tests : vérifiés à chaque pull request", "idle"));
-  co.appendChild(el("p", "note", "Services payants : " + fmt(D.couts.services_payants_eur, 2) + " € · appels à l'IA aujourd'hui : " +
-    D.couts.appels_ia_aujourdhui + " / " + D.couts.plafond_ia + " (offre gratuite)."));
-  var ex = document.getElementById("experiments"); ex.style.marginTop = "16px";
-  [["Expériences", D.experiences || []], ["Propositions", D.propositions || []]].forEach(function (g) {
-    ex.appendChild(el("div", "kicker", g[0])); var ul = el("ul", "files");
-    if (!g[1].length) ul.appendChild(el("li", "empty", "aucune"));
-    g[1].slice(0, 6).forEach(function (f) { var li = el("li"); li.appendChild(el("span", null, f.date));
-      li.appendChild(document.createTextNode(f.nom)); ul.appendChild(li); });
-    ex.appendChild(ul); });
+  var co = document.getElementById("costs"); co.style.marginTop = "14px";
+  co.appendChild(state("tests : vérifiés à chaque pull request", "idle"));
+  co.appendChild(el("p", "note", "Services payants : 0 € · données publiques de Polymarket seulement (aucune clé, aucune IA)."));
   if (C.faillite) { var f = el("p", "headline", "FAILLITE : " + C.raison_faillite); document.getElementById("resume").prepend(f); }
 
   // ---------------------------------------------------------------- blocs repliables
@@ -1974,30 +1614,22 @@ footer { color: var(--muted); font: 0.76rem/1.6 var(--mono); text-align: center;
   // au départ : config/dashboard.yaml → replier. Le choix d'Etienne est retenu par son navigateur.
   (function folding() {
     var start = (D.mise_en_page || {}).replier || [], SYSD = D.systeme || {};
-    var arenaLive = arena.filter(function (s) { return !s.eliminee && !s.retiree; });
-    var srcOkN = srcNames.filter(function (n) { return /^ok/.test(srcs[n]); }).length;
     var SUM = {
       "aujourdhui": function () { var t = (D.aujourdhui || [])[0]; return t ? t.texte : "rien à signaler"; },
-      "arene": function () { return arenaLive.length + " stratégies en course" + (leader ? " · en tête : " +
-        sname(leader.nom).replace(/\u200b/g, "") + " (" + (leader.capital >= initial ? "+" : "−") +
-        fmt(Math.abs((leader.capital / initial - 1) * 100), 1) + " %)" : ""); },
+      "strategie": function () { return CONF.operations ? CONF.operations + " paris terminés · confiance " +
+        fmt(CONF.confiance_pct, 0) + " % · " + CONF.verdict : "pas encore de pari terminé"; },
       "principal": function () { var K = (D.ordres_principal || {}).compte || {}; return fmt(K.achats || 0, 0) + " achats · " +
         fmt(K.ventes || 0, 0) + " ventes · " + fmt(K.reglements || 0, 0) + " règlements · investi " + fmt(invested, 2); },
-      "entonnoir": function () { return (D.entonnoir || []).length + " stratégie(s) mère(s) découpée(s) en morceaux"; },
-      "positions": function () { return fmt(SYSD.positions_tous_portefeuilles, 0) + " positions ouvertes, dont " +
-        fmt(C.positions_ouvertes, 0) + " pour le capital principal"; },
-      "ordres-poses": function () { return fmt(SYSD.ordres_poses, 0) + " ordres posés · récompenses estimées jusqu'à " +
-        fmt(bestReward, 2) + " $ en 7 j (hors capital)"; },
+      "positions": function () { return fmt(C.positions_ouvertes, 0) + " positions ouvertes · investi " + fmt(invested, 2); },
+      "ordres-poses": function () { return fmt(SYSD.ordres_poses, 0) + " ordres posés en attente"; },
       "Opérations clôturées": function () { return closedAll.length ? wins + " gagnées sur les " + closedAll.length + " dernières" : "aucune"; },
       "Marchés surveillés": function () { return fmt((D.surveilles || []).length, 0) + " marchés surveillés au dernier cycle"; },
       "decisions-recentes": function () { return fmt((D.decisions || []).length, 0) + " décisions récentes du contrôleur"; },
       "Pouls de la machine": function () { return cyclesOk + "/" + cyclesAll + " cycles réussis en 24 h · le cœur bat à " + (BPM ? BPM + " bpm" : "l'arrêt"); },
-      "Sources d'information": function () { return srcOkN + "/" + srcNames.length + " sources en marche"; },
-      "Système": function () { return (alive ? "en vie" : "silencieux") + " · services payants 0 € · IA " +
-        D.couts.appels_ia_aujourdhui + "/" + D.couts.plafond_ia; }
+      "Système": function () { return (alive ? "en vie" : "silencieux") + " · services payants 0 €"; }
     };
     var cards = [];
-    ["principal", "aujourdhui", "arene", "entonnoir", "positions", "ordres-poses", "decisions-recentes", "journal", "systeme"].forEach(function (id) {
+    ["principal", "aujourdhui", "strategie", "positions", "ordres-poses", "decisions-recentes", "journal", "systeme"].forEach(function (id) {
       var b = document.getElementById(id); if (!b) return;
       (b.classList.contains("card") ? [b] : Array.prototype.slice.call(b.querySelectorAll(":scope > .card"))).forEach(function (c) {
         var h2 = c.querySelector(".head h2"); if (!h2) return;

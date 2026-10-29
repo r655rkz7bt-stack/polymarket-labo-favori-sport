@@ -1,6 +1,6 @@
 """Génère le tableau de bord (site/index.html et site/data.json) depuis les journaux vérifiés.
 
-Le cycle le régénère automatiquement toutes les 30 minutes ; ce script force une génération.
+Le cycle le régénère automatiquement (dashboard.every_minutes) ; ce script force une génération.
 Usage : python scripts/build_dashboard.py [--dev-key] [--out site] [--fragment fichier.html]
   --fragment : écrit aussi le contenu seul (sans <html>/<head>), pour un aperçu en ligne.
 """
@@ -10,7 +10,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from _common import ROOT, get_key, load_settings_with_arena as load_settings, resolve
+from _common import ROOT, get_key, load_settings, resolve
 
 from polymarket_agent import dashboard
 from polymarket_agent.persistence import Database
@@ -26,8 +26,7 @@ def main() -> int:
     key = get_key(args.dev_key)
     db = Database(resolve(ROOT, settings["paths"]["database"]))
     try:
-        main_ledger, shadows = dashboard.open_ledgers(settings, ROOT, key)
-        data = dashboard.collect(main_ledger, shadows, db, settings, ROOT)
+        data = dashboard.collect(dashboard.open_ledger(settings, ROOT, key), db, settings, ROOT)
     finally:
         db.close()
     out = Path(args.out) if args.out else resolve(ROOT, settings["dashboard"]["output_dir"])

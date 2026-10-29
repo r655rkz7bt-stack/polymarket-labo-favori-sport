@@ -1,5 +1,4 @@
-"""Sélection adverse des ordres POSÉS : « markout » (16/10/2026, priorité 1 du rapport
-experiments/veille_bots/Bots Polymarket et leurs gains.md).
+"""Sélection adverse des ordres POSÉS : « markout » (16/10/2026).
 
 Le piège n°1 des « faiseurs » : un ordre posé est surtout servi quand il a tort (le prix part
 contre lui juste après). On le mesure, sans rien changer au capital :
@@ -88,12 +87,10 @@ def _aggregate(cases: list[tuple[str, float, float, datetime, str]], db, settled
 
 
 def unfilled_orders(db, portfolio: str, since: datetime, limit: int = 1500) -> list[dict]:
-    # La base nomme les fantômes « fantome:<nom> », le tableau de bord « <nom> » : les deux sont acceptés.
-    names = (portfolio, portfolio.removeprefix("fantome:"), "fantome:" + portfolio.removeprefix("fantome:"))
     rows = db.conn.execute(
-        "SELECT token_id, side, created_at, proposal FROM pending_orders WHERE portfolio IN (?,?,?) AND fills=0 "
+        "SELECT token_id, side, created_at, proposal FROM pending_orders WHERE portfolio=? AND fills=0 "
         "AND status IN ('EXPIRE', 'REMPLACE') AND created_at >= ? ORDER BY created_at DESC LIMIT ?",
-        (*names, since.isoformat(), limit)).fetchall()
+        (portfolio, since.isoformat(), limit)).fetchall()
     out = []
     for token, side, created, proposal in rows:
         try:

@@ -35,17 +35,10 @@ def main() -> int:
     ledger = Ledger.open(resolve(ROOT, paths["ledger"]), get_key(args.dev_key),
                          resolve(ROOT, paths["bankruptcy_lock"]))
     db = Database(resolve(ROOT, paths["database"]))
-    key = get_key(args.dev_key)
     outputs = []
     try:
         report = build_report(ledger, db, latest_marks(db, ledger.state.positions))
         outputs.append(write_report(report, ROOT / "reports"))
-        # Portefeuilles fantômes : un rapport chacun, jamais mélangé au capital principal.
-        shadow_dir = resolve(ROOT, paths["shadow_dir"])
-        for path in sorted(shadow_dir.glob("*.jsonl")) if shadow_dir.exists() else []:
-            shadow = Ledger.open(path, key, path.with_suffix(".BANKRUPT.lock"))
-            shadow_report = build_report(shadow, db, latest_marks(db, shadow.state.positions))
-            outputs.append(write_report(shadow_report, ROOT / "reports" / f"fantome_{path.stem}"))
     finally:
         db.close()
     for path in outputs:

@@ -2,26 +2,37 @@
 
 Copie élaguée (28/10/2026) du système de trading de « Polymarket Autonomous Lab ». Retiré : toute la partie recherche
 (expériences, tests sur le passé, enquêtes, feuille de mission, routine du chercheur), les autres stratégies et les
-sources externes (actualités, météo, crypto, bookmakers…). Gardé à l'identique : le noyau protégé (journal signé,
-contrôleur, simulateur d'exécution, frais, audit, réinitialisation) et le gardien des pull requests.
+sources externes (actualités, météo, crypto, bookmakers…) ; puis, le 29/10/2026 (décision d'Etienne), l'arène, les
+portefeuilles fantômes, la santé des stratégies et les récompenses estimées. Gardé à l'identique : le noyau protégé
+(journal signé, contrôleur, simulateur d'exécution, frais, audit, réinitialisation) et le gardien des pull requests.
 
 ## Le cycle (`scripts/run_simulation.py` → `main.run_cycle`)
-1. Journal signé relu et vérifié (`ledger.py`) ; faillite = arrêt.
-2. Règlements des marchés terminés (`settlement.py`), ordres posés servis ou annulés (`execution_simulator.py`).
-3. Arène (`arena.py`) : classement des fantômes, confiance, champion(s) et parts du capital principal ; santé et renfort
-   des stratégies (`strategy_health.py`).
-4. Scanner (`market_scanner.py`, Gamma) : 1 500 marchés, 150 surveillés ; carnets (CLOB).
-5. Stratégie (`strategy_engine.py` : `NaiveFavorite`, enveloppée par `Filtered` et `PatientOrders`) : propositions et
-   ordres posés pour chaque fantôme ; le principal copie à l'échelle de sa part (`main.Weighted`, plancher et plafonds de
-   `config/settings.yaml` → `principal`).
-6. Contrôleur de sécurité (`safety_controller.py`), simulation sur les vrais carnets, écriture au journal.
-7. Tableau de bord (`dashboard.py`, `dashboard_template.html`) toutes les 10 minutes.
+1. Journal signé du capital principal relu et vérifié (`ledger.py`) ; faillite = arrêt. Ordres posés laissés par les
+   anciens fantômes : annulés (`Database.cancel_orders_except`).
+2. Règlements des marchés terminés (`settlement.py`, marchés lus par lots).
+3. Scanner (`market_scanner.py`, Gamma), réglages identiques à l'ancien labo : environ 4 900 marchés (pages par étiquette,
+   marchés longs, échus, séries d'e-sport), les 150 plus échangés surveillés. Puis les marchés de sport demandés par
+   les voisines de l'ancien labo (`voisines.py`, code repris mot pour mot, seulement leurs demandes) ; carnets (CLOB).
+   Vérifié le 29/10/2026 : sur les mêmes réponses de Polymarket, l'ancien code et celui-ci montrent au fantôme les
+   mêmes 57 marchés de sport.
+4. Ordres posés des cycles précédents : servis si un vendeur traverse leur prix, annulés à l'expiration, à la fermeture du
+   marché ou, si la stratégie le demande, au coup d'envoi (`execution_simulator.simulate_resting_buy`).
+5. Santé (`sante.py`) : facteur de mise aux règles de l'ancien fantôme (prudence × renfort, ou 0 si suspendue), calculé
+   sur ses antécédents (`antecedents.py`, journal du labo d'origine relu et sa chaîne de hash vérifiée) puis sur le
+   journal d'ici. Stratégie (`strategy_engine.py` : `NaiveFavorite`, enveloppée par `Filtered` puis `PatientOrders`) :
+   achats immédiats et ordres à poser, mises × ce facteur ; deux camps d'un même match refusés, mise plafonnée
+   (`principal.max_mise`).
+6. Contrôleur de sécurité (`safety_controller.py`), relecture du carnet (`relecture.chute_max`), réserve de liquidités
+   si `principal.reserve_liquidites` est réglée (pas pour l'instant : le fantôme n'en avait pas), simulation sur les vrais carnets, écriture au journal, battement de cœur.
+7. Tableau de bord (`dashboard.py`, `dashboard_template.html`, `today.py`) toutes les 10 minutes.
 
 ## Données
-Journal signé : branche `data` ; base d'analyse : cache GitHub Actions + sauvegarde quotidienne dans `data` ;
-tableau de bord : branche `gh-pages`. Détails d'exploitation : `docs/EXPLOITATION.md`.
+Journal signé : branche `data` (`ledger/ledger.jsonl`) ; base d'analyse : cache GitHub Actions + sauvegarde quotidienne dans
+`data` ; tableau de bord : branche `gh-pages`. Détails d'exploitation : `docs/EXPLOITATION.md`.
 
-## Confiance (arène)
-`arena.standing` : capital réalisé, croissance log, score t par opération (`confiance`, en % : `confidence_percent`) ;
-`learning_engine` : verdict (« prometteuse », « indéterminée »…) avec intervalle par événement ; règles d'entrée au capital
-principal (12 opérations, +2 %, t ≥ 1…) et de retrait : `config/promotion.yaml`.
+## Confiance (`confiance.py`)
+Sur les opérations clôturées des antécédents puis du capital principal : score t des rendements par pari (résultat ÷ mise), confiance en %
+(`confidence_percent`), confiance par jour (gagnés contre attendus, journée par journée), verdict (« prometteuse »,
+« indéterminée », « ne fonctionne pas ») d'après l'intervalle à 90 % du rendement moyen, par bootstrap sur les matchs ;
+« données insuffisantes » sous 20 opérations. Les courbes du tableau de bord (bouton « Voir ses courbes ») refont ces calculs
+dans le navigateur, à partir du journal public ; `tests/test_dashboard.py` vérifie que les deux donnent les mêmes chiffres.
