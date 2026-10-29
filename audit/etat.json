@@ -1,11 +1,11 @@
 {
  "dernier_seq": {
-  "principal": 30,
+  "principal": 31,
   "fantome:nf_sport_patiente_prix_850_875_avant_match_v1.0.0": 3,
   "fantome:nf_sport_patiente_prix_850_875_v1.0.0": 5
  },
  "dernier_seq_reglements": {
-  "principal": 30,
+  "principal": 31,
   "fantome:nf_sport_patiente_prix_850_875_avant_match_v1.0.0": 3,
   "fantome:nf_sport_patiente_prix_850_875_v1.0.0": 5
  },
@@ -13,5 +13,5 @@
  "non_verifiables": 0,
  "reglements_verifies": 0,
  "anomalies": [],
- "derniere_execution": "2026-10-29T01:36:50+00:00"
+ "derniere_execution": "2026-10-29T01:38:44+00:00"
 }
