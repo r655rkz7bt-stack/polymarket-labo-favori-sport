@@ -1,17 +1,17 @@
 {
  "dernier_seq": {
-  "principal": 741,
+  "principal": 743,
   "fantome:nf_sport_patiente_prix_850_875_avant_match_v1.0.0": 21,
   "fantome:nf_sport_patiente_prix_850_875_v1.0.0": 53
  },
  "dernier_seq_reglements": {
-  "principal": 741,
+  "principal": 743,
   "fantome:nf_sport_patiente_prix_850_875_avant_match_v1.0.0": 21,
   "fantome:nf_sport_patiente_prix_850_875_v1.0.0": 53
  },
  "verifiees": 55,
  "non_verifiables": 0,
- "reglements_verifies": 31,
+ "reglements_verifies": 32,
  "anomalies": [
   {
    "portefeuille": "fantome:nf_sport_patiente_prix_850_875_v1.0.0",
@@ -54,5 +54,5 @@
    "op_id": "settle-78467575242220041289713828815410078842248534705727801040876167319058893630995"
   }
  ],
- "derniere_execution": "2026-10-30T18:56:15+00:00"
+ "derniere_execution": "2026-10-30T19:01:51+00:00"
 }
