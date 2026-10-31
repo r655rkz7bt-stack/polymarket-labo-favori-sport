@@ -1,0 +1,198 @@
+{
+ "genere_le": "2026-10-31T19:25:58+00:00",
+ "capital": {
+  "solde_disponible": "557.0133",
+  "capital_immobilise": "47.3563",
+  "gains_realises_nets": "-395.6305",
+  "gains_latents": "2.0368",
+  "frais_payes": "2.4977",
+  "capital_total_estime": "606.4063",
+  "positions_ouvertes": "2",
+  "faillite": "non"
+ },
+ "faillite": {
+  "etat": false,
+  "raison": ""
+ },
+ "drawdown_max": 0.4783,
+ "dernier_battement": "2026-10-31T19:25:56+00:00",
+ "positions_ouvertes": [
+  {
+   "marche": "W75 Toronto: Reese Brantmeier vs Kajsa Rinaldo Persson",
+   "issue": "Reese Brantmeier",
+   "parts": "30.53",
+   "cout": "26.23",
+   "prix_moyen": "0.8590",
+   "prix_de_marque": "0.999",
+   "latent": "4.27",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "groupe": "1286384",
+   "ouverte_le": "2026-10-31T17:20"
+  },
+  {
+   "marche": "Counter-Strike: Acend vs Butterfly (BO3) - CCT Europe Series #12 Playoffs",
+   "issue": "Acend",
+   "parts": "24.86",
+   "cout": "21.13",
+   "prix_moyen": "0.8500",
+   "prix_de_marque": "0.76",
+   "latent": "-2.24",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "groupe": "1282507",
+   "ouverte_le": "2026-10-31T19:20"
+  }
+ ],
+ "operations_cloturees": 46,
+ "dernieres_operations": [
+  {
+   "marche": "6402182",
+   "issue": "Julia Riera",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "0.72",
+   "resolution": "résolu : Julia Riera",
+   "cloturee_le": "2026-10-30T19:08"
+  },
+  {
+   "marche": "6422889",
+   "issue": "Fluxo W7M",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "4.04",
+   "resolution": "résolu : Fluxo W7M",
+   "cloturee_le": "2026-10-30T19:35"
+  },
+  {
+   "marche": "6422797",
+   "issue": "fnatic",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "-32.10",
+   "resolution": "résolu : Eternal Fire",
+   "cloturee_le": "2026-10-30T21:20"
+  },
+  {
+   "marche": "6435634",
+   "issue": "Hacha Esports",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "3.66",
+   "resolution": "résolu : Hacha Esports",
+   "cloturee_le": "2026-10-31T00:10"
+  },
+  {
+   "marche": "6402196",
+   "issue": "Fiona Ferro",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "4.75",
+   "resolution": "résolu : Fiona Ferro",
+   "cloturee_le": "2026-10-31T03:55"
+  },
+  {
+   "marche": "6411871",
+   "issue": "Yu Jun Lin",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "3.71",
+   "resolution": "résolu : Yu Jun Lin",
+   "cloturee_le": "2026-10-31T06:30"
+  },
+  {
+   "marche": "6424220",
+   "issue": "Elena Pridankina",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "3.78",
+   "resolution": "résolu : Elena Pridankina",
+   "cloturee_le": "2026-10-31T07:01"
+  },
+  {
+   "marche": "6420915",
+   "issue": "Amir Omarkhanov",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "-19.71",
+   "resolution": "résolu : Aristarkh Safonov",
+   "cloturee_le": "2026-10-31T11:50"
+  },
+  {
+   "marche": "Chennai Open, Qualification: Jensi Dipakbhai Kanabar vs Weronika Falkowska",
+   "issue": "Weronika Falkowska",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "4.91",
+   "resolution": "résolu : Weronika Falkowska",
+   "cloturee_le": "2026-10-31T14:25"
+  },
+  {
+   "marche": "Counter-Strike: naocopulas vs paiN (BO3) - Gamers Club Masters Group B",
+   "issue": "paiN",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "-21.56",
+   "resolution": "résolu : naocopulas",
+   "cloturee_le": "2026-10-31T15:55"
+  },
+  {
+   "marche": "Dota 2: Team Yandex vs GamerLegion (BO3) - PARI Universe Playoffs",
+   "issue": "Team Yandex",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "3.68",
+   "resolution": "résolu : Team Yandex",
+   "cloturee_le": "2026-10-31T16:01"
+  },
+  {
+   "marche": "Counter-Strike: Bounty Hunters Esports vs BARCA (BO3) - FiReSPORTS Last Chance Group A",
+   "issue": "BARCA",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "3.64",
+   "resolution": "résolu : BARCA",
+   "cloturee_le": "2026-10-31T16:30"
+  },
+  {
+   "marche": "Erste Bank Open: Daniil Medvedev vs Carlos Alcaraz",
+   "issue": "Carlos Alcaraz",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "5.06",
+   "resolution": "résolu : Carlos Alcaraz",
+   "cloturee_le": "2026-10-31T16:30"
+  },
+  {
+   "marche": "Counter-Strike: 1WIN vs 5star (BO3) - Moscow Cyber Games Playoffs",
+   "issue": "1WIN",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "3.69",
+   "resolution": "résolu : 1WIN",
+   "cloturee_le": "2026-10-31T16:50"
+  },
+  {
+   "marche": "Courmayeur: Elsa Jacquemot vs Alina Charaeva",
+   "issue": "Alina Charaeva",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "3.83",
+   "resolution": "résolu : Alina Charaeva",
+   "cloturee_le": "2026-10-31T18:10"
+  }
+ ],
+ "performances": {
+  "nf_sport_patiente_prix_850_875 v1.0.0": {
+   "operations": 46,
+   "evenements": 46,
+   "gagnantes": 36,
+   "taux_reussite": 0.783,
+   "profit_net": "-395.63",
+   "frais": "2.50",
+   "rendement_sur_mises": -0.1094,
+   "esperance_par_operation": "-8.60",
+   "ic90_rendement_par_euro": [
+    -0.2063,
+    0.0263
+   ],
+   "brier": 0.1852,
+   "log_loss": 0.5905,
+   "assez_de_donnees": true
+  }
+ },
+ "cycles_24h": {
+  "OK": 292
+ },
+ "decisions_24h": {
+  "acceptees": 51,
+  "rejetees": 4,
+  "raisons_de_rejet": {
+   "carnet périmé": 4
+  }
+ },
+ "erreurs_recentes": []
+}
