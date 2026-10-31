@@ -1,5 +1,7 @@
 # Laboratoire « favori de sport » : nf_sport_patiente_prix_850_875
 
+**📊 Tableau de bord : [r655rkz7bt-stack.github.io/polymarket-labo-favori-sport](https://r655rkz7bt-stack.github.io/polymarket-labo-favori-sport/)**
+
 Trading **simulé** sur Polymarket (1 000 € virtuels, jamais d'argent réel), centré sur une seule stratégie, exportée le
 28/10/2026 du laboratoire [Polymarket Autonomous Lab](https://github.com/r655rkz7bt-stack/Polymarket-autonomus-lab), où elle était
 n° 1 de l'arène (1 000 → 1 484 € fictifs en 8,3 jours, 85 opérations, confiance 90 %, au 28/10 23 h 48 UTC).
