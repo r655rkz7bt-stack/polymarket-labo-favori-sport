@@ -1,11 +1,11 @@
 {
  "dernier_seq": {
-  "principal": 1360,
+  "principal": 1362,
   "fantome:nf_sport_patiente_prix_850_875_avant_match_v1.0.0": 21,
   "fantome:nf_sport_patiente_prix_850_875_v1.0.0": 53
  },
  "dernier_seq_reglements": {
-  "principal": 1360,
+  "principal": 1362,
   "fantome:nf_sport_patiente_prix_850_875_avant_match_v1.0.0": 21,
   "fantome:nf_sport_patiente_prix_850_875_v1.0.0": 53
  },
@@ -84,7 +84,15 @@
    "date": "2026-11-01T11:15:39",
    "detail": "réglé à 1 alors que le marché 6181240 n'est pas clos",
    "op_id": "settle-85087672160941819845655242561081560536474739384120763146004023628603293078605"
+  },
+  {
+   "portefeuille": "principal",
+   "seq": 1361,
+   "type": "SETTLE",
+   "date": "2026-11-01T18:10:41",
+   "detail": "réglé à 0 alors que le marché 6496860 n'est pas clos",
+   "op_id": "settle-53157825878813096613838737462137730302104847957357325672967131374347377635762"
   }
  ],
- "derniere_execution": "2026-11-01T18:06:20+00:00"
+ "derniere_execution": "2026-11-01T18:11:24+00:00"
 }
