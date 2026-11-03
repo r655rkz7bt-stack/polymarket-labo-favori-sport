@@ -1,11 +1,11 @@
 {
  "dernier_seq": {
-  "principal": 2005,
+  "principal": 2006,
   "fantome:nf_sport_patiente_prix_850_875_avant_match_v1.0.0": 21,
   "fantome:nf_sport_patiente_prix_850_875_v1.0.0": 53
  },
  "dernier_seq_reglements": {
-  "principal": 2005,
+  "principal": 2006,
   "fantome:nf_sport_patiente_prix_850_875_avant_match_v1.0.0": 21,
   "fantome:nf_sport_patiente_prix_850_875_v1.0.0": 53
  },
@@ -126,5 +126,5 @@
    "op_id": "settle-77062453381374130728022509054100733119809864502227046445041234967120707943795"
   }
  ],
- "derniere_execution": "2026-11-03T19:28:08+00:00"
+ "derniere_execution": "2026-11-03T19:33:01+00:00"
 }
