@@ -1,0 +1,184 @@
+{
+ "genere_le": "2026-11-07T16:26:01+00:00",
+ "capital": {
+  "solde_disponible": "460.7719",
+  "capital_immobilise": "28.3638",
+  "gains_realises_nets": "-510.8642",
+  "gains_latents": "-3.3997",
+  "frais_payes": "2.6844",
+  "capital_total_estime": "485.7361",
+  "positions_ouvertes": "1",
+  "faillite": "non"
+ },
+ "faillite": {
+  "etat": false,
+  "raison": ""
+ },
+ "drawdown_max": 0.5678,
+ "dernier_battement": "2026-11-07T16:25:59+00:00",
+ "positions_ouvertes": [
+  {
+   "marche": "Will Bilibili Gaming win Worlds 2026?",
+   "issue": "No",
+   "parts": "33.33",
+   "cout": "28.36",
+   "prix_moyen": "0.8510",
+   "prix_de_marque": "0.749",
+   "latent": "-3.40",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "groupe": "991810",
+   "ouverte_le": "2026-10-31T23:55"
+  }
+ ],
+ "operations_cloturees": 84,
+ "dernieres_operations": [
+  {
+   "marche": "6454137",
+   "issue": "Francisco Cerundolo",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "-17.51",
+   "resolution": "résolu : Arthur Rinderknech",
+   "cloturee_le": "2026-11-03T12:25"
+  },
+  {
+   "marche": "6454205",
+   "issue": "Matteo Berrettini",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "0.38",
+   "resolution": "résolu : Matteo Berrettini",
+   "cloturee_le": "2026-11-03T16:05"
+  },
+  {
+   "marche": "6454091",
+   "issue": "Valentin Vacherot",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "-12.29",
+   "resolution": "résolu : Novak Djokovic",
+   "cloturee_le": "2026-11-03T16:55"
+  },
+  {
+   "marche": "6476791",
+   "issue": "Mai Hontama",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "3.13",
+   "resolution": "résolu : Mai Hontama",
+   "cloturee_le": "2026-11-03T17:01"
+  },
+  {
+   "marche": "6580044",
+   "issue": "Xipto Esports",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "3.22",
+   "resolution": "résolu : Xipto Esports",
+   "cloturee_le": "2026-11-03T17:40"
+  },
+  {
+   "marche": "6537716",
+   "issue": "Magda Linette",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "3.27",
+   "resolution": "résolu : Magda Linette",
+   "cloturee_le": "2026-11-03T18:01"
+  },
+  {
+   "marche": "6597414",
+   "issue": "Walczaki",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "2.50",
+   "resolution": "résolu : Walczaki",
+   "cloturee_le": "2026-11-03T19:46"
+  },
+  {
+   "marche": "6619225",
+   "issue": "Cadence Brace",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "3.88",
+   "resolution": "résolu : Cadence Brace",
+   "cloturee_le": "2026-11-03T21:01"
+  },
+  {
+   "marche": "6589660",
+   "issue": "Yellow Submarine",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "2.59",
+   "resolution": "résolu : Yellow Submarine",
+   "cloturee_le": "2026-11-03T21:05"
+  },
+  {
+   "marche": "6612435",
+   "issue": "Franco Roncadelli",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "4.04",
+   "resolution": "résolu : Franco Roncadelli",
+   "cloturee_le": "2026-11-03T21:55"
+  },
+  {
+   "marche": "6575071",
+   "issue": "QUINTESSÊNCIA",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "3.31",
+   "resolution": "résolu : QUINTESSÊNCIA",
+   "cloturee_le": "2026-11-03T22:50"
+  },
+  {
+   "marche": "6507310",
+   "issue": "Facundo Acosta",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "4.49",
+   "resolution": "résolu : Facundo Acosta",
+   "cloturee_le": "2026-11-04T00:40"
+  },
+  {
+   "marche": "6575075",
+   "issue": "BESTIA Academy",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "-20.46",
+   "resolution": "résolu : Zetta Games",
+   "cloturee_le": "2026-11-04T03:10"
+  },
+  {
+   "marche": "6665136",
+   "issue": "BetBoom Team",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "-24.56",
+   "resolution": "résolu : Liquid",
+   "cloturee_le": "2026-11-04T09:10"
+  },
+  {
+   "marche": "6635805",
+   "issue": "XIAOYIN YANG",
+   "strategie": "nf_sport_patiente_prix_850_875 v1.0.0",
+   "resultat": "-19.98",
+   "resolution": "résolu : Filip Peliwo",
+   "cloturee_le": "2026-11-04T10:20"
+  }
+ ],
+ "performances": {
+  "nf_sport_patiente_prix_850_875 v1.0.0": {
+   "operations": 84,
+   "evenements": 82,
+   "gagnantes": 64,
+   "taux_reussite": 0.762,
+   "profit_net": "-510.86",
+   "frais": "2.68",
+   "rendement_sur_mises": -0.117,
+   "esperance_par_operation": "-6.08",
+   "ic90_rendement_par_euro": [
+    -0.1871,
+    -0.0199
+   ],
+   "brier": 0.2014,
+   "log_loss": 0.6343,
+   "assez_de_donnees": true
+  }
+ },
+ "cycles_24h": {
+  "OK": 292
+ },
+ "decisions_24h": {
+  "acceptees": 0,
+  "rejetees": 0,
+  "raisons_de_rejet": {}
+ },
+ "erreurs_recentes": []
+}
